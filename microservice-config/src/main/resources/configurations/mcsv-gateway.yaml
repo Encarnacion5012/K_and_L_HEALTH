@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: mcsv-gateway
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8181/realms/k-and-l_health
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: k-and-l_health_microservices
+            client-secret: edi1Oout90L8kHBZM4hqFlg5MfRymzoJXWKDh7s5kDaIeHWhDl9TrCrxxbZx3DE0yQwKI6r9l51yKd7G42Qioe
+            authorization-grant-type: {baseUrl}/login/oauth2/code/keycloak
+            scope:
+              - openid
+              - profile
+              - email
+              - roles
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+          routes:
+            - id: users
+              uri: lb://mcsv-users
+              predicates:
+                - Path= api/users/**
+              filters:
+                - SaveSession
+                - TokenRelay
