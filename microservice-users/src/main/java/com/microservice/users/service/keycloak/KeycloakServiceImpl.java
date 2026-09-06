@@ -146,4 +146,22 @@ public class KeycloakServiceImpl implements IkeycloakService {
 
         log.info("User {} updated successfully with ID {}", updateDto.username(), userId);
     }
+
+    @Override
+    public void updateUserNoRoles(String userId, UserUpdateDto updateDto) {
+
+        UserResource userResource = KeycloakProvider.getUserResource().get(userId);
+
+        UserRepresentation userRepresentation = userResource.toRepresentation();
+
+        userRepresentation.setFirstName(updateDto.firstName());
+        userRepresentation.setLastName(updateDto.lastName());
+        userRepresentation.setEmail(updateDto.email());
+        userRepresentation.setUsername(updateDto.username());
+        userRepresentation.setEmailVerified(true);
+        userRepresentation.setEnabled(true);
+
+        userResource.update(userRepresentation);
+
+    }
 }
