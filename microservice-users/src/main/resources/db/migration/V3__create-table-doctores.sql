@@ -1,6 +1,6 @@
 create table doctores(
     id_doctor UUID not null primary key,
-    id_keycloak UUID not null unique,
+    id_authentication UUID not null unique,
     nombre varchar(50) not null,
     apellido varchar(50) not null,
     fecha_nacimiento date not null,

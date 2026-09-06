@@ -1,6 +1,6 @@
 CREATE TABLE pacientes(
     id_paciente UUID primary key not null,
-    id_keycloak UUID unique not null ,
+    id_authentication UUID unique not null ,
     nombre varchar(50) not null,
     apellido varchar(50) not null,
     cedula varchar(20) not null unique,
