@@ -3,6 +3,7 @@ package com.microservice.users.controller;
 
 import com.microservice.users.dto.paciente.DetallePacienteDTO;
 import com.microservice.users.dto.paciente.RegistroPacienteDTO;
+import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
 import com.microservice.users.service.pacientes.IPacienteService;
 
 import jakarta.validation.Valid;
@@ -34,7 +35,7 @@ public class PacienteController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Page<DetallePacienteDTO>> findAll(@PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+    public ResponseEntity<Page<DetallesPacienteProjection>> findAll(@PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
 
         return ResponseEntity.ok(pacienteService.findAll(pageable));
     }

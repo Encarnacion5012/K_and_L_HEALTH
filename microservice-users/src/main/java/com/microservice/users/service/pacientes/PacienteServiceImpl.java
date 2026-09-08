@@ -4,6 +4,7 @@ import com.microservice.users.dto.paciente.DetallePacienteDTO;
 import com.microservice.users.dto.paciente.RegistroPacienteDTO;
 import com.microservice.users.mapper.PacienteMapperService;
 import com.microservice.users.model.Paciente;
+import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
 import com.microservice.users.repository.PacienteRepository;
 import com.microservice.users.service.keycloak.IkeycloakService;
 import jakarta.transaction.Transactional;
@@ -45,8 +46,7 @@ public class PacienteServiceImpl implements IPacienteService {
     }
 
     @Override
-    public Page<DetallePacienteDTO> findAll(Pageable pageable) {
-        return pacienteRepository.findAll(pageable)
-                .map(pacienteMapperService::entityToDTO);
+    public Page<DetallesPacienteProjection> findAll(Pageable pageable) {
+        return pacienteRepository.findAllPacientes(pageable);
     }
 }
