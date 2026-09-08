@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
@@ -20,6 +21,8 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
     Page<DetallesPacienteProjection> findAllPacientes(Pageable pageable);
 
 
+    Optional<Paciente> findByIdAuthentication(UUID uuid);
+    Optional<Paciente> findByCedula(String cedula);
 }
 
 
