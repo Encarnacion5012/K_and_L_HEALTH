@@ -14,7 +14,7 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
 
     @Query(value = """
         SELECT 
-        p.idPaciente, p.nombre, p.apellido,p.email, p.cedula, p.direccion, p.sexo, p.fechaNacimiento, p.telefono        
+        p      
          FROM Paciente p
     """)
     Page<DetallesPacienteProjection> findAllPacientes(Pageable pageable);
