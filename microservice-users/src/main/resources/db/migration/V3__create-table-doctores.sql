@@ -6,7 +6,7 @@ create table doctores(
     fecha_nacimiento date not null,
     sexo varchar(20) not null,
     telefono varchar(20) not null,
-
+    email varchar(120) not null,
     id_especialidad int not null,
 
     hora_ingreso time,

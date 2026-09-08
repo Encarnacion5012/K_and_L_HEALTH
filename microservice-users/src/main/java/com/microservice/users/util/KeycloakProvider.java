@@ -9,12 +9,12 @@ import org.keycloak.admin.client.resource.UsersResource;
 
 public class KeycloakProvider {
     private static final String SERVER_URL = "http://localhost:8181";
-    private static final String REALM_NAME = "k-and-l_health_microservices";
+    private static final String REALM_NAME = "k-and-l_health";
     private static final String REALM_MASTER = "master";
     private static final String ADMIN_CLI = "admin-cli";
     private static final String USER_CONSOLE  = "admin";
     private static final String PASSWORD_CONSOLE  = "admin";
-    private static final String CLIENT_SECRET   = "edi1Oout90L8kHBZM4hqFlg5MfRymzoJXWKDh7s5kDaIeHWhDl9TrCrxxbZx3DE0yQwKI6r9l51yKd7G42Qioe";
+    private static final String CLIENT_SECRET   = "UyoWXBD7eVB6dzZVa3HuP8hSTHNuENNWxETbktNkeqglIoG37yT3UhVAyr3mEI9uDrLW1XovxVIHOQTpWb6GSf";
 
     public static RealmResource getRealmResource() {
         Keycloak keycloak = KeycloakBuilder.builder()

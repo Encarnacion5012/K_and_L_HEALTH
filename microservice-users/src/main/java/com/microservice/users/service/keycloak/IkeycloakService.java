@@ -10,7 +10,7 @@ import java.util.UUID;
 public interface IkeycloakService {
     List<UserRepresentation> findAllUser();
     List<UserRepresentation>searchUserByUsername(String username);
-    UUID createUser(UserRegisterDto user); //hacer el dto de creccion
+    String createUser(UserRegisterDto user); //hacer el dto de creccion
     void deleteUser(String userId);
     void updateUser(String userId, UserUpdateDto updateDto); //hacer el dto de actualizar
     void updateUserNoRoles(String userId, UserUpdateDto updateDto);

@@ -36,34 +36,34 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
-    public UUID createUser(UserRegisterDto userDTO) {
+    public String createUser(UserRegisterDto userDTO) {
         UsersResource userResource = KeycloakProvider.getUserResource();
 
-        UUID userId = UUID.randomUUID();
+        // 1. Configurar credenciales iniciales directamente en el UserRepresentation
+        CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+        credentialRepresentation.setTemporary(false);
+        credentialRepresentation.setType(OAuth2Constants.PASSWORD);
+        credentialRepresentation.setValue(userDTO.password());
 
         UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setId(userId.toString());
         userRepresentation.setFirstName(userDTO.firstName());
         userRepresentation.setLastName(userDTO.lastName());
         userRepresentation.setEmail(userDTO.email());
         userRepresentation.setUsername(userDTO.username());
         userRepresentation.setEmailVerified(true);
         userRepresentation.setEnabled(true);
+        userRepresentation.setCredentials(List.of(credentialRepresentation));
 
-        // try-with-resources cierra la conexión HTTP automáticamente
         try (Response response = userResource.create(userRepresentation)) {
             int status = response.getStatus();
 
             if (status == Response.Status.CREATED.getStatusCode()) {
-                // 1. Asignar contraseña
-                CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-                credentialRepresentation.setTemporary(false);
-                credentialRepresentation.setType(OAuth2Constants.PASSWORD);
-                credentialRepresentation.setValue(userDTO.password());
+                // 2. Extraer el ID real asignado por Keycloak desde el header Location
+                String path = response.getLocation().getPath();
+                String createdUserId = path.substring(path.lastIndexOf('/') + 1);
+                UUID userId = UUID.fromString(createdUserId);
 
-                userResource.get(userId.toString()).resetPassword(credentialRepresentation);
-
-                // 2. Resolver roles usando la llamada estática limpia
+                // 3. Asignar roles a nivel de Realm
                 RealmResource realmResource = KeycloakProvider.getRealmResource();
                 List<RoleRepresentation> rolesRepresentation;
 
@@ -76,13 +76,13 @@ public class KeycloakServiceImpl implements IkeycloakService {
                 }
 
                 realmResource.users()
-                        .get(userId.toString())
+                        .get(createdUserId)
                         .roles()
                         .realmLevel()
                         .add(rolesRepresentation);
 
                 log.info("User {} created successfully with ID {}", userDTO.username(), userId);
-                return userId; // Retorna el UUID para persistirlo en PostgreSQL
+                return createdUserId; // Retorna el UUID para persistirlo en PostgreSQL
 
             } else if (status == Response.Status.CONFLICT.getStatusCode()) {
                 log.error("User {} or email already exists in Keycloak", userDTO.username());

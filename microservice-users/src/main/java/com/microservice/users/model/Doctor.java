@@ -46,6 +46,8 @@ public class Doctor {
     @Column(name = "hora_salida")
     private LocalTime horaSalida;
 
+    private  String email;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private Especialidad especialidad;
 }

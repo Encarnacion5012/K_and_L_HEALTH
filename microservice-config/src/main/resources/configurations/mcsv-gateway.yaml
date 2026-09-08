@@ -1,6 +1,42 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: mcsv-gateway
+
+  cloud:
+
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+          routes:
+            - id: users-routes
+              uri: lb://mcsv-users
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - SaveSession
+                - TokenRelay
+
+            - id: pacientes-routes
+              uri: lb://mcsv-users
+              predicates:
+                - Path=/api/pacientes/**
+              filters:
+                - SaveSession
+                - TokenRelay
+
+            - id: users-service-docs
+              uri: lb://mcsv-users
+              predicates:
+                - Path=/users-service/v3/api-docs
+              filters:
+                - SetPath=/v3/api-docs
+
   security:
     oauth2:
       client:
@@ -11,26 +47,39 @@ spring:
           keycloak:
             provider: keycloak
             client-id: k-and-l_health_microservices
-            client-secret: edi1Oout90L8kHBZM4hqFlg5MfRymzoJXWKDh7s5kDaIeHWhDl9TrCrxxbZx3DE0yQwKI6r9l51yKd7G42Qioe
-            authorization-grant-type: {baseUrl}/login/oauth2/code/keycloak
+            client-secret: "UyoWXBD7eVB6dzZVa3HuP8hSTHNuENNWxETbktNkeqglIoG37yT3UhVAyr3mEI9uDrLW1XovxVIHOQTpWb6GSf"
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
             scope:
               - openid
               - profile
               - email
               - roles
 
-  cloud:
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:password@localhost:8761/eureka/
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    with-credentials: true
+    urls:
+      - name: Microservicio Usuarios
+        url: /users-service/v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
     gateway:
-      server:
-        webflux:
-          discovery:
-            locator:
-              enabled: true
-          routes:
-            - id: users
-              uri: lb://mcsv-users
-              predicates:
-                - Path= api/users/**
-              filters:
-                - SaveSession
-                - TokenRelay
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.cloud.loadbalancer: DEBUG

@@ -38,6 +38,8 @@ public class Paciente {
 
     private String sexo;
 
+    private String email;
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 

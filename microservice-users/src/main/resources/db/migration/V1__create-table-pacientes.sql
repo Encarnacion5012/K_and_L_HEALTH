@@ -5,6 +5,7 @@ CREATE TABLE pacientes(
     apellido varchar(50) not null,
     cedula varchar(20) not null unique,
     sexo varchar(20) not null,
+    email varchar(120) not null,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     fecha_nacimiento date not null,
     telefono varchar(20),
