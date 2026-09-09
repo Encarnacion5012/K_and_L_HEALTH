@@ -2,6 +2,7 @@ package com.microservice.users.service.keycloak;
 
 import com.microservice.users.dto.user.UserRegisterDto;
 import com.microservice.users.dto.user.UserUpdateDto;
+import com.microservice.users.dto.user.UserUpdateNoRoles;
 import com.microservice.users.util.KeycloakProvider;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -148,18 +149,32 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
-    public void updateUserNoRoles(String userId, UserUpdateDto updateDto) {
+    public void updateUserNoRoles(String userId, UserUpdateNoRoles updateDto) {
+
+        if (updateDto == null) {
+            return;
+        }
 
         UserResource userResource = KeycloakProvider.getUserResource().get(userId);
 
         UserRepresentation userRepresentation = userResource.toRepresentation();
 
-        userRepresentation.setFirstName(updateDto.firstName());
-        userRepresentation.setLastName(updateDto.lastName());
-        userRepresentation.setEmail(updateDto.email());
-        userRepresentation.setUsername(updateDto.username());
-        userRepresentation.setEmailVerified(true);
-        userRepresentation.setEnabled(true);
+        if (updateDto.firstName() != null) {
+            userRepresentation.setFirstName(updateDto.firstName());
+        }
+
+        if (updateDto.lastName() != null){
+            userRepresentation.setLastName(updateDto.lastName());
+        }
+        if (updateDto.email() != null){
+            userRepresentation.setEmail(updateDto.email());
+            userRepresentation.setEmailVerified(true);
+        }
+
+        if (updateDto.username() != null) {
+            userRepresentation.setUsername(updateDto.username());
+        }
+
 
         userResource.update(userRepresentation);
 

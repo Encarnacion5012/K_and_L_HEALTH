@@ -38,6 +38,8 @@ public class Doctor {
 
     private String sexo;
 
+    private String cedula;
+
     private String  telefono;
 
     @Column(name = "hora_ingreso")

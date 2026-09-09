@@ -4,6 +4,7 @@ create table doctores(
     nombre varchar(50) not null,
     apellido varchar(50) not null,
     fecha_nacimiento date not null,
+    cedula varchar(20) not null unique,
     sexo varchar(20) not null,
     telefono varchar(20) not null,
     email varchar(120) not null,

@@ -2,11 +2,12 @@ package com.microservice.users.mapper;
 
 import com.microservice.users.dto.paciente.DetallePacienteDTO;
 import com.microservice.users.dto.paciente.RegistroPacienteDTO;
+import com.microservice.users.dto.paciente.UpdatePacienteDTO;
 import com.microservice.users.model.Paciente;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
+
 public interface PacienteMapperService {
 
     @Mapping(target = "idAuthentication", ignore = true)
@@ -21,4 +22,11 @@ public interface PacienteMapperService {
 
 
     DetallePacienteDTO entityToDTO(Paciente paciente);
+
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "nombre", source = "dto.userUpdate.firstName")
+    @Mapping(target = "apellido", source = "dto.userUpdate.lastName")
+    @Mapping(target = "email", source = "dto.userUpdate.email")
+    void updatePaciente(UpdatePacienteDTO dto, @MappingTarget Paciente paciente);
 }

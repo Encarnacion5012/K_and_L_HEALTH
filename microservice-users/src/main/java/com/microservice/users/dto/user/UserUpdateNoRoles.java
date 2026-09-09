@@ -2,18 +2,20 @@ package com.microservice.users.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public record UserUpdateNoRoles(
-        @NotBlank(message = "The username can not be empty or null")
+        @Pattern(regexp = "^(?!\\s*$).+", message = "The username cannot be blank")
         String username,
 
-        @NotBlank(message = "The email can not be empty or null")
         @Email(message = "You have to use the correct structure for emails")
+        @Pattern(regexp = "^(?!\\s*$).+", message = "The email cannot be blank")
         String email,
 
-        @NotBlank(message = "The firstname can not be empty or null")
+        @Pattern(regexp = "^(?!\\s*$).+", message = "The firstname cannot be blank")
         String firstName,
-        @NotBlank(message = "The lastname can not be empty or null")
+
+        @Pattern(regexp = "^(?!\\s*$).+", message = "The lastname cannot be blank")
         String lastName
 ) {
 }
