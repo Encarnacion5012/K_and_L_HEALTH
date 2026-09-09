@@ -3,6 +3,7 @@ package com.microservice.users.controller;
 
 import com.microservice.users.dto.paciente.DetallePacienteDTO;
 import com.microservice.users.dto.paciente.RegistroPacienteDTO;
+import com.microservice.users.dto.paciente.UpdatePacienteDTO;
 import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
 import com.microservice.users.service.pacientes.IPacienteService;
 
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.UUID;
 
 
 @RestController
@@ -38,6 +40,12 @@ public class PacienteController {
     public ResponseEntity<Page<DetallesPacienteProjection>> findAll(@PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
 
         return ResponseEntity.ok(pacienteService.findAll(pageable));
+    }
+
+    @PutMapping("/update/{id_paciente}")
+    public ResponseEntity<DetallePacienteDTO> updatePaciente(@RequestBody UpdatePacienteDTO updatePacienteDTO, @PathVariable UUID id_paciente) {
+       DetallePacienteDTO pacienteACtualizado = pacienteService.update(id_paciente, updatePacienteDTO);
+        return ResponseEntity.ok(pacienteACtualizado);
     }
 
 }
