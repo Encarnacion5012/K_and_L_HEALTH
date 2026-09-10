@@ -2,7 +2,8 @@ package com.microservice.users.service.keycloak;
 
 import com.microservice.users.dto.user.UserRegisterDto;
 import com.microservice.users.dto.user.UserUpdateDto;
-import com.microservice.users.dto.user.UserUpdateNoRoles;
+import com.microservice.users.dto.user.UserUpdateNoRolesDTO;
+import com.microservice.users.model.Roles_Users;
 import com.microservice.users.util.KeycloakProvider;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.RolesRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Service;
 
@@ -96,6 +98,59 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
+    public String createUserPacinte(UserRegisterDto userDTO) {
+        UsersResource userResource = KeycloakProvider.getUserResource();
+
+        // 1. Configurar credenciales iniciales directamente en el UserRepresentation
+        CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+        credentialRepresentation.setTemporary(false);
+        credentialRepresentation.setType(OAuth2Constants.PASSWORD);
+        credentialRepresentation.setValue(userDTO.password());
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setFirstName(userDTO.firstName());
+        userRepresentation.setLastName(userDTO.lastName());
+        userRepresentation.setEmail(userDTO.email());
+        userRepresentation.setUsername(userDTO.username());
+        userRepresentation.setEmailVerified(true);
+        userRepresentation.setEnabled(true);
+        userRepresentation.setCredentials(List.of(credentialRepresentation));
+
+        try (Response response = userResource.create(userRepresentation)) {
+            int status = response.getStatus();
+
+            if (status == Response.Status.CREATED.getStatusCode()) {
+                // 2. Extraer el ID real asignado por Keycloak desde el header Location
+                String path = response.getLocation().getPath();
+                String createdUserId = path.substring(path.lastIndexOf('/') + 1);
+                UUID userId = UUID.fromString(createdUserId);
+
+                RolesRepresentation rolesRepresentation = new RolesRepresentation();
+
+                RealmResource realmResource = KeycloakProvider.getRealmResource();
+
+                List<RoleRepresentation> rolesRepresentations = List.of(realmResource.roles().get(Roles_Users.PACIENTE.name()).toRepresentation());
+
+                realmResource.users()
+                        .get(createdUserId)
+                        .roles()
+                        .realmLevel()
+                        .add(rolesRepresentations);
+
+                log.info("User {} created successfully with ID {}", userDTO.username(), userId);
+                return createdUserId; // Retorna el UUID para persistirlo en PostgreSQL
+
+            } else if (status == Response.Status.CONFLICT.getStatusCode()) {
+                log.error("User {} or email already exists in Keycloak", userDTO.username());
+                throw new IllegalStateException("User or email already exists");
+            } else {
+                log.error("Unable to create user {}. Keycloak HTTP Status: {}", userDTO.username(), status);
+                throw new RuntimeException("Error communicating with authentication provider");
+            }
+        }
+    }
+
+    @Override
     public void deleteUser(String userId) {
         KeycloakProvider.getUserResource().get(userId).remove();
         log.info("User with ID {} deleted from Keycloak", userId);
@@ -149,7 +204,7 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
-    public void updateUserNoRoles(String userId, UserUpdateNoRoles updateDto) {
+    public void updateUserNoRoles(String userId, UserUpdateNoRolesDTO updateDto) {
 
         if (updateDto == null) {
             return;

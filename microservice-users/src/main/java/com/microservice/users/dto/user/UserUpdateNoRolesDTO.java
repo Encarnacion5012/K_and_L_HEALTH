@@ -1,10 +1,9 @@
 package com.microservice.users.dto.user;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
-public record UserUpdateNoRoles(
+public record UserUpdateNoRolesDTO(
         @Pattern(regexp = "^(?!\\s*$).+", message = "The username cannot be blank")
         String username,
 

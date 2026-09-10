@@ -1,6 +1,7 @@
 package com.microservice.users.dto.paciente;
 
 import com.microservice.users.dto.user.UserRegisterDto;
+import com.microservice.users.dto.user.UserRegisterPacienteDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
@@ -9,7 +10,7 @@ import java.time.LocalDate;
 
 public record RegistroPacienteDTO(
     @Valid
-    UserRegisterDto userRegisterDto,
+    UserRegisterPacienteDTO userRegisterDto,
 
 
     String cedula,

@@ -2,11 +2,10 @@ package com.microservice.users.service.keycloak;
 
 import com.microservice.users.dto.user.UserRegisterDto;
 import com.microservice.users.dto.user.UserUpdateDto;
-import com.microservice.users.dto.user.UserUpdateNoRoles;
+import com.microservice.users.dto.user.UserUpdateNoRolesDTO;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface IkeycloakService {
     List<UserRepresentation> findAllUser();
@@ -14,5 +13,7 @@ public interface IkeycloakService {
     String createUser(UserRegisterDto user); //hacer el dto de creccion
     void deleteUser(String userId);
     void updateUser(String userId, UserUpdateDto updateDto); //hacer el dto de actualizar
-    void updateUserNoRoles(String userId, UserUpdateNoRoles updateDto);
+    void updateUserNoRoles(String userId, UserUpdateNoRolesDTO updateDto);
+    String createUserPacinte(UserRegisterDto user);
+
 }
