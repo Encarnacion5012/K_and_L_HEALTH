@@ -1,6 +1,7 @@
 package com.microservice.users.service.keycloak;
 
 import com.microservice.users.dto.user.UserRegisterDto;
+import com.microservice.users.dto.user.UserRegisterPacienteDTO;
 import com.microservice.users.dto.user.UserUpdateDto;
 import com.microservice.users.dto.user.UserUpdateNoRolesDTO;
 import com.microservice.users.model.Roles_Users;
@@ -38,24 +39,34 @@ public class KeycloakServiceImpl implements IkeycloakService {
                 .search(username, true);
     }
 
+   private UserRepresentation reutilizableUserRepresentation(String username, String password, String firstName, String lastName, String email) {
+       // 1. Configurar credenciales iniciales directamente en el UserRepresentation
+       CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+       credentialRepresentation.setTemporary(false);
+       credentialRepresentation.setType(OAuth2Constants.PASSWORD);
+       credentialRepresentation.setValue(password);
+
+       UserRepresentation userRepresentation = new UserRepresentation();
+       userRepresentation.setFirstName(firstName);
+       userRepresentation.setLastName(lastName);
+       userRepresentation.setEmail(email);
+       userRepresentation.setUsername(username);
+       userRepresentation.setEmailVerified(true);
+       userRepresentation.setEnabled(true);
+       userRepresentation.setCredentials(List.of(credentialRepresentation));
+
+       return userRepresentation;
+   }
+
     @Override
     public String createUser(UserRegisterDto userDTO) {
         UsersResource userResource = KeycloakProvider.getUserResource();
 
-        // 1. Configurar credenciales iniciales directamente en el UserRepresentation
-        CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-        credentialRepresentation.setTemporary(false);
-        credentialRepresentation.setType(OAuth2Constants.PASSWORD);
-        credentialRepresentation.setValue(userDTO.password());
 
-        UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setFirstName(userDTO.firstName());
-        userRepresentation.setLastName(userDTO.lastName());
-        userRepresentation.setEmail(userDTO.email());
-        userRepresentation.setUsername(userDTO.username());
-        userRepresentation.setEmailVerified(true);
-        userRepresentation.setEnabled(true);
-        userRepresentation.setCredentials(List.of(credentialRepresentation));
+
+        UserRepresentation userRepresentation = reutilizableUserRepresentation(
+                userDTO.username(), userDTO.password(), userDTO.firstName(), userDTO.lastName(), userDTO.email()
+        );
 
         try (Response response = userResource.create(userRepresentation)) {
             int status = response.getStatus();
@@ -98,23 +109,14 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
-    public String createUserPacinte(UserRegisterDto userDTO) {
+    public String createUserPacinte(UserRegisterPacienteDTO userDTO) {
         UsersResource userResource = KeycloakProvider.getUserResource();
 
-        // 1. Configurar credenciales iniciales directamente en el UserRepresentation
-        CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-        credentialRepresentation.setTemporary(false);
-        credentialRepresentation.setType(OAuth2Constants.PASSWORD);
-        credentialRepresentation.setValue(userDTO.password());
 
-        UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setFirstName(userDTO.firstName());
-        userRepresentation.setLastName(userDTO.lastName());
-        userRepresentation.setEmail(userDTO.email());
-        userRepresentation.setUsername(userDTO.username());
-        userRepresentation.setEmailVerified(true);
-        userRepresentation.setEnabled(true);
-        userRepresentation.setCredentials(List.of(credentialRepresentation));
+
+        UserRepresentation userRepresentation = reutilizableUserRepresentation(
+                userDTO.username(), userDTO.password(), userDTO.firstName(), userDTO.lastName(), userDTO.email()
+        );
 
         try (Response response = userResource.create(userRepresentation)) {
             int status = response.getStatus();

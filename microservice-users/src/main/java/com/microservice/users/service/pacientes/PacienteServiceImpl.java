@@ -30,7 +30,7 @@ public class PacienteServiceImpl implements IPacienteService {
     @Transactional
     public DetallePacienteDTO create(RegistroPacienteDTO registroPacienteDTO) {
 
-       UUID idAuthorizationNewUser = UUID.fromString(keycloakService.createUser(registroPacienteDTO.userRegisterDto())) ;
+       UUID idAuthorizationNewUser = UUID.fromString(keycloakService.createUserPacinte(registroPacienteDTO.userRegisterDto())) ;
 
         Paciente nuevoPaciente;
         nuevoPaciente = pacienteMapperService.createDTOtoEntity(registroPacienteDTO);
