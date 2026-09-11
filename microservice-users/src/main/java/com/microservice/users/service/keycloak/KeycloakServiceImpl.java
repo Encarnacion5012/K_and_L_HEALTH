@@ -18,7 +18,9 @@ import org.keycloak.representations.idm.RolesRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -60,12 +62,18 @@ public class KeycloakServiceImpl implements IkeycloakService {
 
     @Override
     public String createUser(UserRegisterDto userDTO) {
+       return userCreation(userDTO.username(), userDTO.firstName(), userDTO.lastName(), userDTO.email(),userDTO.password(), userDTO.roles());
+    }
+
+
+
+    private String userCreation(
+            String userName, String firstName, String lastName, String email, String password, Set<Roles_Users> roles
+    ) {
         UsersResource userResource = KeycloakProvider.getUserResource();
 
-
-
         UserRepresentation userRepresentation = reutilizableUserRepresentation(
-                userDTO.username(), userDTO.password(), userDTO.firstName(), userDTO.lastName(), userDTO.email()
+                userName, password,firstName, lastName, email
         );
 
         try (Response response = userResource.create(userRepresentation)) {
@@ -75,16 +83,16 @@ public class KeycloakServiceImpl implements IkeycloakService {
                 // 2. Extraer el ID real asignado por Keycloak desde el header Location
                 String path = response.getLocation().getPath();
                 String createdUserId = path.substring(path.lastIndexOf('/') + 1);
-                UUID userId = UUID.fromString(createdUserId);
+
 
                 // 3. Asignar roles a nivel de Realm
                 RealmResource realmResource = KeycloakProvider.getRealmResource();
                 List<RoleRepresentation> rolesRepresentation;
 
-                if (userDTO.roles() == null || userDTO.roles().isEmpty()) {
+                if (roles == null || roles.isEmpty()) {
                     rolesRepresentation = List.of(realmResource.roles().get("USER").toRepresentation());
                 } else {
-                    rolesRepresentation = userDTO.roles().stream()
+                    rolesRepresentation = roles.stream()
                             .map(roleEnum -> realmResource.roles().get(roleEnum.name()).toRepresentation())
                             .toList();
                 }
@@ -95,61 +103,28 @@ public class KeycloakServiceImpl implements IkeycloakService {
                         .realmLevel()
                         .add(rolesRepresentation);
 
-                log.info("User {} created successfully with ID {}", userDTO.username(), userId);
+                log.info("User {} created successfully with ID {}", userName, UUID.fromString(createdUserId));
                 return createdUserId; // Retorna el UUID para persistirlo en PostgreSQL
 
             } else if (status == Response.Status.CONFLICT.getStatusCode()) {
-                log.error("User {} or email already exists in Keycloak", userDTO.username());
+                log.error("User {} or email already exists in Keycloak", userName);
                 throw new IllegalStateException("User or email already exists");
             } else {
-                log.error("Unable to create user {}. Keycloak HTTP Status: {}", userDTO.username(), status);
+                log.error("Unable to create user {}. Keycloak HTTP Status: {}", userName, status);
                 throw new RuntimeException("Error communicating with authentication provider");
             }
         }
     }
 
+
+
+
+
     @Override
     public String createUserPacinte(UserRegisterPacienteDTO userDTO) {
-        UsersResource userResource = KeycloakProvider.getUserResource();
+        Set<Roles_Users> rolPaciente = Set.of(Roles_Users.PACIENTE);
 
-
-
-        UserRepresentation userRepresentation = reutilizableUserRepresentation(
-                userDTO.username(), userDTO.password(), userDTO.firstName(), userDTO.lastName(), userDTO.email()
-        );
-
-        try (Response response = userResource.create(userRepresentation)) {
-            int status = response.getStatus();
-
-            if (status == Response.Status.CREATED.getStatusCode()) {
-                // 2. Extraer el ID real asignado por Keycloak desde el header Location
-                String path = response.getLocation().getPath();
-                String createdUserId = path.substring(path.lastIndexOf('/') + 1);
-                UUID userId = UUID.fromString(createdUserId);
-
-                RolesRepresentation rolesRepresentation = new RolesRepresentation();
-
-                RealmResource realmResource = KeycloakProvider.getRealmResource();
-
-                List<RoleRepresentation> rolesRepresentations = List.of(realmResource.roles().get(Roles_Users.PACIENTE.name()).toRepresentation());
-
-                realmResource.users()
-                        .get(createdUserId)
-                        .roles()
-                        .realmLevel()
-                        .add(rolesRepresentations);
-
-                log.info("User {} created successfully with ID {}", userDTO.username(), userId);
-                return createdUserId; // Retorna el UUID para persistirlo en PostgreSQL
-
-            } else if (status == Response.Status.CONFLICT.getStatusCode()) {
-                log.error("User {} or email already exists in Keycloak", userDTO.username());
-                throw new IllegalStateException("User or email already exists");
-            } else {
-                log.error("Unable to create user {}. Keycloak HTTP Status: {}", userDTO.username(), status);
-                throw new RuntimeException("Error communicating with authentication provider");
-            }
-        }
+        return userCreation(userDTO.username(), userDTO.firstName(), userDTO.lastName(), userDTO.email(),userDTO.password(), rolPaciente );
     }
 
     @Override
