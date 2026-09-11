@@ -3,7 +3,9 @@ package com.microservice.users.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -25,7 +27,9 @@ public class Especialidad {
 
     private String descripcion;
 
-    @OneToMany(mappedBy = "especialidad")
-    List<Doctor> doctors;
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "especialidades")
+
+
+    Set<Doctor> doctors = new HashSet<>();
 }
 

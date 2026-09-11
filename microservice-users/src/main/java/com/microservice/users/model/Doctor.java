@@ -9,6 +9,8 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -50,6 +52,9 @@ public class Doctor {
 
     private  String email;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Especialidad especialidad;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable( name = "doctores_especialidades",
+            joinColumns = @JoinColumn(name = "id_doctor"), inverseJoinColumns = @JoinColumn(name = "id_especialidad")
+    )
+    private Set<Especialidad> especialidades = new HashSet<>();
 }

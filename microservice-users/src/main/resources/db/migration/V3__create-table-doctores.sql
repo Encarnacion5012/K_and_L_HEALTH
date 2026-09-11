@@ -8,12 +8,12 @@ create table doctores(
     sexo varchar(20) not null,
     telefono varchar(20) not null,
     email varchar(120) not null,
-    id_especialidad int not null,
+
 
     hora_ingreso time,
     hora_salida time,
 
-    constraint fk_escialidad_doctores foreign key (id_especialidad) references especialidades (id_especialidad),
+
 
     constraint valid_sexo CHECK ( sexo IN ('M','F'))
 
