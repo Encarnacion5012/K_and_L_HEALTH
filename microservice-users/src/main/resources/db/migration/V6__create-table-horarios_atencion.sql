@@ -3,7 +3,7 @@ create table horarios_atencion(
 
     id_doctor UUID not null,
 
-    dia_de_semana SMALLINT not null,
+    dia_de_semana varchar(15) not null,
 
     hora_inicio time not null ,
     hora_fin time not null ,
