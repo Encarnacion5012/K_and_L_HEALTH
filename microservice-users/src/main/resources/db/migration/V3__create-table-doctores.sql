@@ -8,10 +8,9 @@ create table doctores(
     sexo varchar(20) not null,
     telefono varchar(20) not null,
     email varchar(120) not null,
+    exequatur varchar(150) not null,
 
 
-    hora_ingreso time,
-    hora_salida time,
 
 
 

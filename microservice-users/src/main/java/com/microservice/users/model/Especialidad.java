@@ -28,8 +28,6 @@ public class Especialidad {
     private String descripcion;
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "especialidades")
-
-
     Set<Doctor> doctors = new HashSet<>();
 }
 

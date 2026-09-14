@@ -10,6 +10,7 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,13 +45,13 @@ public class Doctor {
 
     private String  telefono;
 
-    @Column(name = "hora_ingreso")
-    private LocalTime horaIngreso;
-
-    @Column(name = "hora_salida")
-    private LocalTime horaSalida;
+    private String exequatur;
 
     private  String email;
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "doctor")
+    private List<HorarioAtencion> horarioAtencion;
+
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable( name = "doctores_especialidades",
