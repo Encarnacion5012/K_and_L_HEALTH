@@ -39,5 +39,6 @@ public class HorarioAtencion {
     @Column(name = "hora_fin")
     private LocalTime horaFin;
 
-    private Integer duracion_cita_minutos;
+    @Column(name = "duracion_cita_minutos")
+    private Integer duracionCitaMinutos;
 }

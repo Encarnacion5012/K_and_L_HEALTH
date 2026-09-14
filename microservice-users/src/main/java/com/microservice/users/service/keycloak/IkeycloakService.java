@@ -16,5 +16,6 @@ public interface IkeycloakService {
     void updateUser(String userId, UpdateUserDto updateDto); //hacer el dto de actualizar
     void updateUserNoRoles(String userId, UpdateUserWithNoRolesDTO updateDto);
     String createUserPacinte(CreateUserWithNoRoleDTO user);
+    String createUserDoctor(CreateUserWithNoRoleDTO user);
 
 }

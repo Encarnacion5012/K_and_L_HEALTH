@@ -206,4 +206,12 @@ public class KeycloakServiceImpl implements IkeycloakService {
         userResource.update(userRepresentation);
 
     }
+
+    @Override
+    public String createUserDoctor(CreateUserWithNoRoleDTO user) {
+        Set<Roles_Users>  rolDoctor = Set.of(Roles_Users.DOCTOR);
+        return userCreation(user.username(), user.firstName(), user.lastName(), user.email(),user.password(), rolDoctor);
+
+
+    }
 }

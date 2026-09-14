@@ -9,6 +9,7 @@ import jakarta.validation.constraints.PastOrPresent;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 public record CreateDcotorDTO(
 
@@ -30,6 +31,6 @@ public record CreateDcotorDTO(
         List<CreateHorarioAtencion> horarioAtencion,
 
         @Valid
-        List<CreateEspecialidad> especialidades
+        Set<CreateEspecialidad> especialidades
 ) {
 }
