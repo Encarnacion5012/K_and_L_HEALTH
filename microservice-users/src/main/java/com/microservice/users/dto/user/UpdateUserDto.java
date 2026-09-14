@@ -1,9 +1,12 @@
 package com.microservice.users.dto.user;
 
+import com.microservice.users.model.Roles_Users;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 
-public record UserUpdateNoRolesDTO(
+import java.util.Set;
+
+public record UpdateUserDto(
         @Pattern(regexp = "^(?!\\s*$).+", message = "The username cannot be blank")
         String username,
 
@@ -15,6 +18,7 @@ public record UserUpdateNoRolesDTO(
         String firstName,
 
         @Pattern(regexp = "^(?!\\s*$).+", message = "The lastname cannot be blank")
-        String lastName
-) {
-}
+        String lastName,
+
+        Set<Roles_Users> roles
+) {}

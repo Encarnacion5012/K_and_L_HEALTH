@@ -49,7 +49,7 @@ public class Doctor {
 
     private  String email;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "doctor")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "doctor")
     private List<HorarioAtencion> horarioAtencion;
 
 
@@ -58,4 +58,23 @@ public class Doctor {
             joinColumns = @JoinColumn(name = "id_doctor"), inverseJoinColumns = @JoinColumn(name = "id_especialidad")
     )
     private Set<Especialidad> especialidades = new HashSet<>();
+
+
+    public void helperRelacionEspecialidad(Set<Especialidad> especialidadesDoctor) {
+        this.especialidades.addAll(especialidadesDoctor);
+        especialidadesDoctor.forEach(especialidad -> {
+
+            if(especialidad.getDoctors() == null){
+                especialidad.setDoctors(new HashSet<>());
+            }
+            especialidad.doctors.add(this);
+        });
+    }
+
+    public void helperRelacionHoracioATencios(List<HorarioAtencion> horarioAtencionDoctor) {
+        this.horarioAtencion.addAll(horarioAtencionDoctor);
+        horarioAtencionDoctor.forEach(horarioAtencion -> {
+            horarioAtencion.setDoctor(this);
+        });
+    }
 }

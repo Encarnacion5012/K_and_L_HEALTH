@@ -1,7 +1,7 @@
 package com.microservice.users.mapper;
 
 import com.microservice.users.dto.paciente.DetallePacienteDTO;
-import com.microservice.users.dto.paciente.RegistroPacienteDTO;
+import com.microservice.users.dto.paciente.CreatePacienteDTO;
 import com.microservice.users.dto.paciente.UpdatePacienteDTO;
 import com.microservice.users.model.Paciente;
 import org.mapstruct.*;
@@ -17,7 +17,7 @@ public interface PacienteMapperService {
     @Mapping(target = "createdAt", expression = "java(java.time.OffsetDateTime.now())")
     @Mapping(target = "email", source = "registroDTO.userRegisterDto.email")
 
-    Paciente createDTOtoEntity(RegistroPacienteDTO registroDTO);
+    Paciente createDTOtoEntity(CreatePacienteDTO registroDTO);
 
 
 

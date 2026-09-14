@@ -1,7 +1,7 @@
 package com.microservice.users.service.pacientes;
 
+import com.microservice.users.dto.paciente.CreatePacienteDTO;
 import com.microservice.users.dto.paciente.DetallePacienteDTO;
-import com.microservice.users.dto.paciente.RegistroPacienteDTO;
 import com.microservice.users.dto.paciente.UpdatePacienteDTO;
 import com.microservice.users.mapper.PacienteMapperService;
 import com.microservice.users.model.Paciente;
@@ -28,12 +28,12 @@ public class PacienteServiceImpl implements IPacienteService {
 
     @Override
     @Transactional
-    public DetallePacienteDTO create(RegistroPacienteDTO registroPacienteDTO) {
+    public DetallePacienteDTO create(CreatePacienteDTO createPacienteDTO) {
 
-       UUID idAuthorizationNewUser = UUID.fromString(keycloakService.createUserPacinte(registroPacienteDTO.userRegisterDto())) ;
+       UUID idAuthorizationNewUser = UUID.fromString(keycloakService.createUserPacinte(createPacienteDTO.userRegisterDto())) ;
 
         Paciente nuevoPaciente;
-        nuevoPaciente = pacienteMapperService.createDTOtoEntity(registroPacienteDTO);
+        nuevoPaciente = pacienteMapperService.createDTOtoEntity(createPacienteDTO);
 
         if (idAuthorizationNewUser == null) {
             throw new RuntimeException("No se puede crear un Paciente, ha habido un error");

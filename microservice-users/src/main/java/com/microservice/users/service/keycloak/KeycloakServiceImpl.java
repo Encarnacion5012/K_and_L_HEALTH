@@ -1,9 +1,6 @@
 package com.microservice.users.service.keycloak;
 
-import com.microservice.users.dto.user.UserRegisterDto;
-import com.microservice.users.dto.user.UserRegisterPacienteDTO;
-import com.microservice.users.dto.user.UserUpdateDto;
-import com.microservice.users.dto.user.UserUpdateNoRolesDTO;
+import com.microservice.users.dto.user.*;
 import com.microservice.users.model.Roles_Users;
 import com.microservice.users.util.KeycloakProvider;
 import jakarta.ws.rs.core.Response;
@@ -59,7 +56,7 @@ public class KeycloakServiceImpl implements IkeycloakService {
    }
 
     @Override
-    public String createUser(UserRegisterDto userDTO) {
+    public String createUser(CreateUserDto userDTO) {
        return userCreation(userDTO.username(), userDTO.firstName(), userDTO.lastName(), userDTO.email(),userDTO.password(), userDTO.roles());
     }
 
@@ -119,7 +116,7 @@ public class KeycloakServiceImpl implements IkeycloakService {
 
 
     @Override
-    public String createUserPacinte(UserRegisterPacienteDTO userDTO) {
+    public String createUserPacinte(CreateUserWithNoRoleDTO userDTO) {
         Set<Roles_Users> rolPaciente = Set.of(Roles_Users.PACIENTE);
 
         return userCreation(userDTO.username(), userDTO.firstName(), userDTO.lastName(), userDTO.email(),userDTO.password(), rolPaciente );
@@ -132,7 +129,7 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
-    public void updateUser(String userId, UserUpdateDto updateDto) {
+    public void updateUser(String userId, UpdateUserDto updateDto) {
         // Implementación de actualización
         RealmResource realmResource = KeycloakProvider.getRealmResource();
 
@@ -179,7 +176,7 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
-    public void updateUserNoRoles(String userId, UserUpdateNoRolesDTO updateDto) {
+    public void updateUserNoRoles(String userId, UpdateUserWithNoRolesDTO updateDto) {
 
         if (updateDto == null) {
             return;

@@ -1,8 +1,8 @@
 package com.microservice.users.controller;
 
 
+import com.microservice.users.dto.paciente.CreatePacienteDTO;
 import com.microservice.users.dto.paciente.DetallePacienteDTO;
-import com.microservice.users.dto.paciente.RegistroPacienteDTO;
 import com.microservice.users.dto.paciente.UpdatePacienteDTO;
 import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
 import com.microservice.users.service.pacientes.IPacienteService;
@@ -28,8 +28,8 @@ public class PacienteController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<DetallePacienteDTO> create(@RequestBody @Valid RegistroPacienteDTO registroPacienteDTO, UriComponentsBuilder uriComponentsBuilder) {
-        DetallePacienteDTO nuevoPaciente = pacienteService.create(registroPacienteDTO);
+    public ResponseEntity<DetallePacienteDTO> create(@RequestBody @Valid CreatePacienteDTO createPacienteDTO, UriComponentsBuilder uriComponentsBuilder) {
+        DetallePacienteDTO nuevoPaciente = pacienteService.create(createPacienteDTO);
 
         URI uri = uriComponentsBuilder.path("api/pacientes/create/{id}").buildAndExpand(nuevoPaciente.idPaciente()).toUri();
 

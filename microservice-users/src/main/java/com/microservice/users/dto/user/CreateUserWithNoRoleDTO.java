@@ -1,14 +1,11 @@
 package com.microservice.users.dto.user;
 
-import com.microservice.users.model.Roles_Users;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Length;
 
-import java.util.Set;
-
-public record UserRegisterPacienteDTO (
+public record CreateUserWithNoRoleDTO(
         @NotBlank(message = "The username can not be empty or null")
         String username,
 

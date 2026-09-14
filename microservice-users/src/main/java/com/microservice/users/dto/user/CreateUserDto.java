@@ -8,7 +8,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.util.Set;
 
-public record UserRegisterDto(
+public record CreateUserDto(
         @NotBlank(message = "The username can not be empty or null")
         String username,
 
