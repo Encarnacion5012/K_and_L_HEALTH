@@ -49,6 +49,8 @@ public class Doctor {
 
     private  String email;
 
+    private Boolean activo;
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "doctor")
     private List<HorarioAtencion> horarioAtencion;
 

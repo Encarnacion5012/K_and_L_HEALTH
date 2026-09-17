@@ -1,8 +1,7 @@
 package com.microservice.users.dto.doctor;
 
-import com.microservice.users.dto.doctor.especialidad.DetalleEspecialidadDto;
+import com.microservice.users.dto.especialidad.DetalleEspecialidadDto;
 import com.microservice.users.dto.doctor.horaiosAtencion.DetalleHorarioAtencionDto;
-import com.microservice.users.projections.doctor.DetallesEspecialidadProjection;
 
 import java.time.LocalDate;
 import java.util.List;

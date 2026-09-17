@@ -17,6 +17,7 @@ public interface DoctorMapperService {
     @Mapping(target = "email", source = "dto.userRegister.email")
     @Mapping(target = "especialidades", ignore = true)
     @Mapping(target = "horarioAtencion", ignore = true)
+    @Mapping(target = "activo", constant = "true")
     Doctor registerDtoToEntity(CreateDcotorDTO dto);
 
 

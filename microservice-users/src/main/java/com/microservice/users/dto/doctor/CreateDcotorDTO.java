@@ -1,6 +1,6 @@
 package com.microservice.users.dto.doctor;
 
-import com.microservice.users.dto.doctor.especialidad.CreateEspecialidad;
+import com.microservice.users.dto.especialidad.CreateEspecialidad;
 import com.microservice.users.dto.doctor.horaiosAtencion.CreateHorarioAtencion;
 import com.microservice.users.dto.user.CreateUserWithNoRoleDTO;
 import jakarta.validation.Valid;
@@ -30,7 +30,6 @@ public record CreateDcotorDTO(
         @Valid
         List<CreateHorarioAtencion> horarioAtencion,
 
-        @Valid
-        Set<CreateEspecialidad> especialidades
+        List<Integer> idEspecialidades
 ) {
 }

@@ -30,6 +30,7 @@ public class HorarioAtencion {
     @JoinColumn(name = "id_doctor")
     private Doctor doctor;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "dia_de_semana")
     private DayOfWeek diaDeSemana;
 

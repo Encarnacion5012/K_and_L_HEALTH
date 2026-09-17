@@ -1,6 +1,6 @@
 package com.microservice.users.mapper;
 
-import com.microservice.users.dto.doctor.especialidad.CreateEspecialidad;
+import com.microservice.users.dto.especialidad.CreateEspecialidad;
 import com.microservice.users.model.Especialidad;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

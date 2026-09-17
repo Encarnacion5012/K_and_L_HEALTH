@@ -16,8 +16,11 @@ import com.microservice.users.service.keycloak.IkeycloakService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -45,7 +48,7 @@ public class DoctorServiceImpl implements IDoctorService {
             uuidDoctor =  keycloakService.createUserDoctor(createDTO.userRegister());
         }catch (Exception e){
 
-          throw new RuntimeException("Error creating user doctor", e.getCause());
+          throw new RuntimeException("Error creating user doctor " + e.getMessage(), e);
 
         }
 
@@ -54,23 +57,31 @@ public class DoctorServiceImpl implements IDoctorService {
 
         doctorRepository.save(newDoctor);
 
-        Set<Especialidad> especialidades = createDTO.especialidades().stream()
-                .map(especialidadMappperService::createDtoTOEntity)
-                .collect(Collectors.toSet());
+        Set<Especialidad> especialidades = new HashSet<>(especialidadRepository.findAllById(createDTO.idEspecialidades()));
 
-        especialidadRepository.saveAll(especialidades);
 
         List<HorarioAtencion> horarioAtencion = createDTO.horarioAtencion().stream()
                 .map(horarioATencionMapperService::registerDtoToEntity)
                 .toList();
 
-        horarioAtencionRepository.saveAll(horarioAtencion);
-
+        newDoctor.helperRelacionHoracioATencios(horarioAtencion);
 
         newDoctor.helperRelacionEspecialidad(especialidades);
 
-        newDoctor.helperRelacionHoracioATencios(horarioAtencion);
+        horarioAtencionRepository.saveAll(horarioAtencion);
+
+
+
+
 
         return doctorMapperService.entityToDto(newDoctor);
     }
+
+
+    @Override
+    public Page<DetallesDoctorProjection> findAll(Pageable pageable) {
+        return doctorRepository.findAllByActivoTrue(pageable);
+    }
+
+
 }
