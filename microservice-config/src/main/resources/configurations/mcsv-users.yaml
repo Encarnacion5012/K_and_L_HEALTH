@@ -18,10 +18,16 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    show-sql: false # Apagado para evitar duplicados en System.out
+    database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-    database: postgresql
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+        use_sql_comments: true
 
 eureka:
   client:
@@ -40,3 +46,6 @@ springdoc:
 logging:
   level:
     org.springframework.web: TRACE
+    # Loggers específicos para ver SQL estructurado y parámetros '?'
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

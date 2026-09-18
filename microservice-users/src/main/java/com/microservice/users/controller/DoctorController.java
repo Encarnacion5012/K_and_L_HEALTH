@@ -10,8 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/doctor")
@@ -25,7 +29,7 @@ public class DoctorController {
     public ResponseEntity<DetalleDoctorDto> cretaeDoctor(@RequestBody CreateDcotorDto dto) {
         DetalleDoctorDto newDoctor = doctorService.createDoctor(dto);
 
-        return ResponseEntity.ok(newDoctor);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newDoctor);
     }
 
     @GetMapping("/all")

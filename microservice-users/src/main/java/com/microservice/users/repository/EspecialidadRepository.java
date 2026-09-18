@@ -10,6 +10,6 @@ import java.util.List;
 public interface EspecialidadRepository extends JpaRepository<Especialidad, Integer> {
 
 
-    @Query(value = "SELECT e FROM Especialidad e")
+    @Query(value = "SELECT e.idEspecialidad as idEspecialidad, e.nombreEspecialidad as nombreEspecialidad FROM Especialidad e")
     List<DetallesEspecialidadProjection> findAllProjection();
 }
