@@ -31,13 +31,13 @@ public class PacienteServiceImpl implements IPacienteService {
     public DetallePacienteDto create(CreatePacienteDto createPacienteDTO) {
 
        UUID idAuthorizationNewUser = UUID.fromString(keycloakService.createUserPacinte(createPacienteDTO.userRegisterDto())) ;
-
-        Paciente nuevoPaciente;
-        nuevoPaciente = pacienteMapperService.createDTOtoEntity(createPacienteDTO);
-
         if (idAuthorizationNewUser == null) {
             throw new RuntimeException("No se puede crear un Paciente, ha habido un error");
         }
+        Paciente nuevoPaciente;
+        nuevoPaciente = pacienteMapperService.createDTOtoEntity(createPacienteDTO);
+
+
         nuevoPaciente.setIdAuthentication(idAuthorizationNewUser);
 
         pacienteRepository.save(nuevoPaciente);
@@ -46,16 +46,15 @@ public class PacienteServiceImpl implements IPacienteService {
     }
 
     @Override
-    public Page<DetallesPacienteProjection> findAll(Pageable pageable) {
-        return pacienteRepository.findAllPacientes(pageable);
+    public Page<DetallesPacienteProjection> findAllActivo(Pageable pageable) {
+        return pacienteRepository.findAllByActivoTrue(pageable);
     }
 
     @Override
     @Transactional
     public DetallePacienteDto update(UUID id, UpdatePacienteDto updateDTO) {
 
-        Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(()-> new EntityNotFoundException("Paciente no encontrado"));
+        Paciente paciente = findEntityByIdHelper(id);
 
 
         keycloakService.updateUserNoRoles(paciente.getIdAuthentication().toString(), updateDTO.userUpdate());
@@ -64,5 +63,45 @@ public class PacienteServiceImpl implements IPacienteService {
 
 
         return pacienteMapperService.entityToDTO(paciente);
+    }
+
+
+    private Paciente findEntityByIdHelper(UUID id) {
+        return pacienteRepository.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException("Paciente no encontrado con el id: " + id));
+    }
+
+    @Override
+    @Transactional
+    public void desactivarPaciente(UUID id) {
+        Paciente paciente = findEntityByIdHelper(id);
+
+        try {
+            keycloakService.changeEnabledState(paciente.getIdAuthentication().toString(), false);
+        }catch (Exception e){
+            throw new  RuntimeException("Error al eliminar el Paciente");
+        }
+        paciente.desactivarPaciente();
+    }
+
+    @Override
+    @Transactional
+    public void reactivarPaciente(UUID id) {
+        Paciente paciente = findEntityByIdHelper(id);
+
+        try {
+            keycloakService.changeEnabledState(paciente.getIdAuthentication().toString(), true);
+        }catch (Exception e){
+            throw new  RuntimeException("Error al reactivar el Paciente");
+        }
+
+
+        paciente.reactivarPaciente();
+    }
+
+    @Override
+    public DetallesPacienteProjection getByIdPaciente(UUID idPaciente) {
+        return pacienteRepository.findByIdPaciente(idPaciente)
+                .orElseThrow(()-> new EntityNotFoundException("Paciente no encontrado"));
     }
 }

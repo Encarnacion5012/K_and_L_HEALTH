@@ -6,7 +6,12 @@ import com.microservice.users.projections.doctor.DetallesDoctorProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.UUID;
+
 public interface IDoctorService {
     DetalleDoctorDto createDoctor(CreateDcotorDto createDTO);
-    Page<DetallesDoctorProjection> findAll(Pageable pageable);
+    Page<DetallesDoctorProjection> findAllACtivo(Pageable pageable);
+    void desactivarDoctor(UUID idDoctor);
+    void reactivarDoctor(UUID idDoctor);
+    DetallesDoctorProjection findAllByIdDoctor(UUID idDoctor);
 }

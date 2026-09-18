@@ -48,6 +48,9 @@ public class Doctor {
 
     private Boolean activo;
 
+    @Column(name = "fecha_desactivacion")
+    private LocalDate fechaDesactivacion;
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "doctor")
     private List<HorarioAtencion> horarioAtencion;
 
@@ -78,5 +81,18 @@ public class Doctor {
         horarioAtencionDoctor.forEach(horarioAtencion -> {
             horarioAtencion.setDoctor(this);
         });
+    }
+
+    public void desactivarDoctor(){
+        if (!this.activo){
+            throw new IllegalStateException("Este doctor ya esta desactivado");
+        }
+        this.activo = false;
+        this.fechaDesactivacion = LocalDate.now();
+    }
+
+    public void reactivarDoctor(){
+        this.activo = true;
+        this.fechaDesactivacion = null;
     }
 }

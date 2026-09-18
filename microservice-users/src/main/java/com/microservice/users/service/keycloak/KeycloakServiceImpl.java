@@ -214,4 +214,18 @@ public class KeycloakServiceImpl implements IkeycloakService {
 
 
     }
+
+    @Override
+    public void changeEnabledState(String userId, boolean enabled) {
+        UserResource userResource = KeycloakProvider.getUserResource().get(userId);
+        UserRepresentation user = userResource.toRepresentation();
+        user.setEnabled(enabled);
+        userResource.update(user);
+
+        if (!enabled) {
+            userResource.logout();
+            log.info("Usuario {} deshabilitado y sesiones cerradas en Keycloak", userId);
+        }
+
+    }
 }

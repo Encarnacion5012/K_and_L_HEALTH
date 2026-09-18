@@ -10,6 +10,8 @@ CREATE TABLE pacientes(
     fecha_nacimiento date not null,
     telefono varchar(20),
     direccion varchar(100),
+    activo boolean not null default true,
+    fecha_desactivacion date
 
     constraint sexo_valido CHECK (sexo IN ('M', 'F'))
 

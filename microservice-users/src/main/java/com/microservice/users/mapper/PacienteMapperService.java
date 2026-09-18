@@ -16,6 +16,8 @@ public interface PacienteMapperService {
     @Mapping(target = "apellido", source = "registroDTO.userRegisterDto.lastName")
     @Mapping(target = "createdAt", expression = "java(java.time.OffsetDateTime.now())")
     @Mapping(target = "email", source = "registroDTO.userRegisterDto.email")
+    @Mapping(target = "activo", constant = "true")
+    @Mapping(target = "fechaDesactivacion", constant = "null")
 
     Paciente createDTOtoEntity(CreatePacienteDto registroDTO);
 

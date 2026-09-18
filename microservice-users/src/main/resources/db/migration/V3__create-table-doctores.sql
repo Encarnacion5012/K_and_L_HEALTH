@@ -9,7 +9,8 @@ create table doctores(
     telefono varchar(20) not null,
     email varchar(120) not null,
     exequatur varchar(150) not null,
-    activo boolean not null
+    activo boolean not null default true,
+    fecha_desactivacion date
 
 
 

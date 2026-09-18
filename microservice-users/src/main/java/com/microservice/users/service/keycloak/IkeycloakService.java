@@ -14,5 +14,6 @@ public interface IkeycloakService {
     void updateUserNoRoles(String userId, UpdateUserWithNoRolesDto updateDto);
     String createUserPacinte(CreateUserWithNoRoleDto user);
     String createUserDoctor(CreateUserWithNoRoleDto user);
+    void changeEnabledState(String userId, boolean enabled);
 
 }

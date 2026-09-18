@@ -13,6 +13,7 @@ import com.microservice.users.repository.DoctorRepository;
 import com.microservice.users.repository.EspecialidadRepository;
 import com.microservice.users.repository.HorarioAtencionRepository;
 import com.microservice.users.service.keycloak.IkeycloakService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,9 +79,48 @@ public class DoctorServiceImpl implements IDoctorService {
 
 
     @Override
-    public Page<DetallesDoctorProjection> findAll(Pageable pageable) {
+    public Page<DetallesDoctorProjection> findAllACtivo(Pageable pageable) {
         return doctorRepository.findAllByActivoTrue(pageable);
     }
 
+    private Doctor findEntityByIdHelper(UUID id) {
+        return doctorRepository.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException("Doctor no encontrado con el id: " + id));
+    }
 
+
+    @Override
+    @Transactional
+    public void desactivarDoctor(UUID idDoctor) {
+
+
+        Doctor doctor = findEntityByIdHelper(idDoctor);
+
+        try {
+            keycloakService.changeEnabledState(doctor.getIdAuthentication().toString(), false);
+        }catch (Exception e){
+            throw new RuntimeException("Error deleting user doctor " + e.getMessage(), e);
+        }
+
+        doctor.desactivarDoctor();
+    }
+
+    @Override
+    @Transactional
+    public void reactivarDoctor(UUID idDoctor) {
+        Doctor doctor = findEntityByIdHelper(idDoctor);
+
+        try {
+            keycloakService.changeEnabledState(doctor.getIdAuthentication().toString(), true);
+        }catch (Exception e){
+            throw new RuntimeException("Error activating user doctor " + e.getMessage(), e);
+        }
+        doctor.reactivarDoctor();
+    }
+
+    @Override
+    public DetallesDoctorProjection findAllByIdDoctor(UUID idDoctor) {
+        return doctorRepository.findAllByIdDoctor(idDoctor)
+                .orElseThrow(()-> new EntityNotFoundException("Doctor no encontrado con el id: " + idDoctor));
+    }
 }

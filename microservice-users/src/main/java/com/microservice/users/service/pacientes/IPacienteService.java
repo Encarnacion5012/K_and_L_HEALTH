@@ -12,7 +12,11 @@ import java.util.UUID;
 
 public interface IPacienteService {
 DetallePacienteDto create(CreatePacienteDto createPacienteDTO);
-Page<DetallesPacienteProjection> findAll(Pageable pageable);
+Page<DetallesPacienteProjection> findAllActivo(Pageable pageable);
 DetallePacienteDto update(UUID id, UpdatePacienteDto updateDTO);
+void desactivarPaciente(UUID id);
+void reactivarPaciente(UUID id);
+DetallesPacienteProjection getByIdPaciente(UUID idPaciente);
+
 
 }

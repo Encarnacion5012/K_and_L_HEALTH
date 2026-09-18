@@ -48,6 +48,23 @@ public class Paciente {
 
     private String telefono;
 
+    private boolean activo;
 
+    @Column(name = "fecha_desactivacion")
+    private LocalDate fechaDesactivacion;
+
+
+    public void desactivarPaciente(){
+        if (!this.activo){
+            throw new IllegalStateException("Paciente ya esta desactivado");
+        }
+        this.activo = false;
+        this.fechaDesactivacion = LocalDate.now();
+    }
+
+    public void reactivarPaciente(){
+        this.activo = true;
+        this.fechaDesactivacion = null;
+    }
 
 }

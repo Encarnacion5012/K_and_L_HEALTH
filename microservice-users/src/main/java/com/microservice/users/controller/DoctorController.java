@@ -23,11 +23,14 @@ public class DoctorController {
 
     @PostMapping("/create")
     public ResponseEntity<DetalleDoctorDto> cretaeDoctor(@RequestBody CreateDcotorDto dto) {
-        return ResponseEntity.ok(doctorService.createDoctor(dto));
+        DetalleDoctorDto newDoctor = doctorService.createDoctor(dto);
+
+        return ResponseEntity.ok(newDoctor);
     }
 
     @GetMapping("/all")
     public ResponseEntity<Page<DetallesDoctorProjection>> findAll(@PageableDefault(size = 10, sort = "idDoctor") Pageable pageable) {
-        return ResponseEntity.ok(doctorService.findAll(pageable));
+        Page<DetallesDoctorProjection> doctores = doctorService.findAllACtivo(pageable);
+        return ResponseEntity.ok(doctores);
     }
 }

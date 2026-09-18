@@ -39,7 +39,7 @@ public class PacienteController {
     @GetMapping("/all")
     public ResponseEntity<Page<DetallesPacienteProjection>> findAll(@PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
 
-        return ResponseEntity.ok(pacienteService.findAll(pageable));
+        return ResponseEntity.ok(pacienteService.findAllActivo(pageable));
     }
 
     @PutMapping("/update/{id_paciente}")
