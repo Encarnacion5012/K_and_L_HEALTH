@@ -1,9 +1,9 @@
 package com.microservice.users.controller;
 
 
-import com.microservice.users.dto.paciente.CreatePacienteDTO;
-import com.microservice.users.dto.paciente.DetallePacienteDTO;
-import com.microservice.users.dto.paciente.UpdatePacienteDTO;
+import com.microservice.users.dto.paciente.CreatePacienteDto;
+import com.microservice.users.dto.paciente.DetallePacienteDto;
+import com.microservice.users.dto.paciente.UpdatePacienteDto;
 import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
 import com.microservice.users.service.pacientes.IPacienteService;
 
@@ -28,8 +28,8 @@ public class PacienteController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<DetallePacienteDTO> create(@RequestBody @Valid CreatePacienteDTO createPacienteDTO, UriComponentsBuilder uriComponentsBuilder) {
-        DetallePacienteDTO nuevoPaciente = pacienteService.create(createPacienteDTO);
+    public ResponseEntity<DetallePacienteDto> create(@RequestBody @Valid CreatePacienteDto createPacienteDTO, UriComponentsBuilder uriComponentsBuilder) {
+        DetallePacienteDto nuevoPaciente = pacienteService.create(createPacienteDTO);
 
         URI uri = uriComponentsBuilder.path("api/pacientes/create/{id}").buildAndExpand(nuevoPaciente.idPaciente()).toUri();
 
@@ -43,8 +43,8 @@ public class PacienteController {
     }
 
     @PutMapping("/update/{id_paciente}")
-    public ResponseEntity<DetallePacienteDTO> updatePaciente(@RequestBody UpdatePacienteDTO updatePacienteDTO, @PathVariable UUID id_paciente) {
-       DetallePacienteDTO pacienteACtualizado = pacienteService.update(id_paciente, updatePacienteDTO);
+    public ResponseEntity<DetallePacienteDto> updatePaciente(@RequestBody UpdatePacienteDto updatePacienteDTO, @PathVariable UUID id_paciente) {
+       DetallePacienteDto pacienteACtualizado = pacienteService.update(id_paciente, updatePacienteDTO);
         return ResponseEntity.ok(pacienteACtualizado);
     }
 

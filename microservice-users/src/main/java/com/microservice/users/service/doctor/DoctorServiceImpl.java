@@ -1,6 +1,6 @@
 package com.microservice.users.service.doctor;
 
-import com.microservice.users.dto.doctor.CreateDcotorDTO;
+import com.microservice.users.dto.doctor.CreateDcotorDto;
 import com.microservice.users.dto.doctor.DetalleDoctorDto;
 import com.microservice.users.mapper.DoctorMapperService;
 import com.microservice.users.mapper.EspecialidadMappperService;
@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -42,7 +41,7 @@ public class DoctorServiceImpl implements IDoctorService {
 
     @Override
     @Transactional
-    public DetalleDoctorDto createDoctor(CreateDcotorDTO createDTO) {
+    public DetalleDoctorDto createDoctor(CreateDcotorDto createDTO) {
         String uuidDoctor;
         try {
             uuidDoctor =  keycloakService.createUserDoctor(createDTO.userRegister());

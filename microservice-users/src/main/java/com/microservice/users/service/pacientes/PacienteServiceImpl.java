@@ -1,8 +1,8 @@
 package com.microservice.users.service.pacientes;
 
-import com.microservice.users.dto.paciente.CreatePacienteDTO;
-import com.microservice.users.dto.paciente.DetallePacienteDTO;
-import com.microservice.users.dto.paciente.UpdatePacienteDTO;
+import com.microservice.users.dto.paciente.CreatePacienteDto;
+import com.microservice.users.dto.paciente.DetallePacienteDto;
+import com.microservice.users.dto.paciente.UpdatePacienteDto;
 import com.microservice.users.mapper.PacienteMapperService;
 import com.microservice.users.model.Paciente;
 import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
@@ -28,7 +28,7 @@ public class PacienteServiceImpl implements IPacienteService {
 
     @Override
     @Transactional
-    public DetallePacienteDTO create(CreatePacienteDTO createPacienteDTO) {
+    public DetallePacienteDto create(CreatePacienteDto createPacienteDTO) {
 
        UUID idAuthorizationNewUser = UUID.fromString(keycloakService.createUserPacinte(createPacienteDTO.userRegisterDto())) ;
 
@@ -52,7 +52,7 @@ public class PacienteServiceImpl implements IPacienteService {
 
     @Override
     @Transactional
-    public DetallePacienteDTO update(UUID id, UpdatePacienteDTO updateDTO) {
+    public DetallePacienteDto update(UUID id, UpdatePacienteDto updateDTO) {
 
         Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(()-> new EntityNotFoundException("Paciente no encontrado"));

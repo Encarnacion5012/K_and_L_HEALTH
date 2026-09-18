@@ -3,7 +3,7 @@ package com.microservice.users.dto.paciente;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record DetallePacienteDTO(
+public record DetallePacienteDto(
         UUID idPaciente,
         String nombre,
         String apellido,

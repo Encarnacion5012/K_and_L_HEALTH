@@ -116,7 +116,7 @@ public class KeycloakServiceImpl implements IkeycloakService {
 
 
     @Override
-    public String createUserPacinte(CreateUserWithNoRoleDTO userDTO) {
+    public String createUserPacinte(CreateUserWithNoRoleDto userDTO) {
         Set<Roles_Users> rolPaciente = Set.of(Roles_Users.PACIENTE);
 
         return userCreation(userDTO.username(), userDTO.firstName(), userDTO.lastName(), userDTO.email(),userDTO.password(), rolPaciente );
@@ -176,7 +176,7 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
-    public void updateUserNoRoles(String userId, UpdateUserWithNoRolesDTO updateDto) {
+    public void updateUserNoRoles(String userId, UpdateUserWithNoRolesDto updateDto) {
 
         if (updateDto == null) {
             return;
@@ -208,7 +208,7 @@ public class KeycloakServiceImpl implements IkeycloakService {
     }
 
     @Override
-    public String createUserDoctor(CreateUserWithNoRoleDTO user) {
+    public String createUserDoctor(CreateUserWithNoRoleDto user) {
         Set<Roles_Users>  rolDoctor = Set.of(Roles_Users.DOCTOR);
         return userCreation(user.username(), user.firstName(), user.lastName(), user.email(),user.password(), rolDoctor);
 

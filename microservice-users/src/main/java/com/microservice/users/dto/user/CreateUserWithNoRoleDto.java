@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Length;
 
-public record CreateUserWithNoRoleDTO(
+public record CreateUserWithNoRoleDto(
         @NotBlank(message = "The username can not be empty or null")
         String username,
 

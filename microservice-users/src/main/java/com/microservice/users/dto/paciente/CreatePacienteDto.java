@@ -1,15 +1,15 @@
 package com.microservice.users.dto.paciente;
 
-import com.microservice.users.dto.user.CreateUserWithNoRoleDTO;
+import com.microservice.users.dto.user.CreateUserWithNoRoleDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 
 import java.time.LocalDate;
 
-public record CreatePacienteDTO(
+public record CreatePacienteDto(
     @Valid
-    CreateUserWithNoRoleDTO userRegisterDto,
+    CreateUserWithNoRoleDto userRegisterDto,
 
 
     String cedula,

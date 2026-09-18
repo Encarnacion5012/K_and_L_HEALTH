@@ -14,6 +14,9 @@ spring:
             locator:
               enabled: true
           routes:
+
+          #Rutas de servicio de usuarios
+          #RUtas de usuarios
             - id: users-routes
               uri: lb://mcsv-users
               predicates:
@@ -22,6 +25,7 @@ spring:
                 - SaveSession
                 - TokenRelay
 
+            #RUtas de pacientes
             - id: pacientes-routes
               uri: lb://mcsv-users
               predicates:
@@ -29,7 +33,25 @@ spring:
               filters:
                 - SaveSession
                 - TokenRelay
+              #RUtas de doctores
+            - id: doctores-routes
+              uri: lb://mcsv-users
+              predicates:
+                - Path=/api/doctor/**
+              filters:
+                - SaveSession
+                - TokenRelay
 
+            #RUtas de especialidades
+            - id: especialidad-routes
+              uri: lb://mcsv-users
+              predicates:
+                - Path=/api/especialidad/**
+              filters:
+                - SaveSession
+                - TokenRelay
+
+            #RUtas de swagger para documentacion
             - id: users-service-docs
               uri: lb://mcsv-users
               predicates:
@@ -83,3 +105,4 @@ logging:
   level:
     org.springframework.cloud.gateway: TRACE
     org.springframework.cloud.loadbalancer: DEBUG
+    org.springframework.web: TRACE

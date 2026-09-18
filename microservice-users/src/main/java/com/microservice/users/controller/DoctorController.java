@@ -2,7 +2,7 @@ package com.microservice.users.controller;
 
 
 
-import com.microservice.users.dto.doctor.CreateDcotorDTO;
+import com.microservice.users.dto.doctor.CreateDcotorDto;
 import com.microservice.users.dto.doctor.DetalleDoctorDto;
 import com.microservice.users.projections.doctor.DetallesDoctorProjection;
 import com.microservice.users.service.doctor.IDoctorService;
@@ -22,7 +22,7 @@ public class DoctorController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<DetalleDoctorDto> cretaeDoctor(@RequestBody CreateDcotorDTO dto) {
+    public ResponseEntity<DetalleDoctorDto> cretaeDoctor(@RequestBody CreateDcotorDto dto) {
         return ResponseEntity.ok(doctorService.createDoctor(dto));
     }
 

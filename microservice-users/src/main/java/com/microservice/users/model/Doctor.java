@@ -9,10 +9,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -74,6 +71,9 @@ public class Doctor {
     }
 
     public void helperRelacionHoracioATencios(List<HorarioAtencion> horarioAtencionDoctor) {
+        if (this.horarioAtencion == null) {
+            this.horarioAtencion = new ArrayList<>();
+        }
         this.horarioAtencion.addAll(horarioAtencionDoctor);
         horarioAtencionDoctor.forEach(horarioAtencion -> {
             horarioAtencion.setDoctor(this);

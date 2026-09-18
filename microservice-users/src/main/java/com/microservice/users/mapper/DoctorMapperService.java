@@ -1,9 +1,8 @@
 package com.microservice.users.mapper;
 
-import com.microservice.users.dto.doctor.CreateDcotorDTO;
+import com.microservice.users.dto.doctor.CreateDcotorDto;
 import com.microservice.users.dto.doctor.DetalleDoctorDto;
 import com.microservice.users.model.Doctor;
-import com.microservice.users.model.Especialidad;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -18,7 +17,7 @@ public interface DoctorMapperService {
     @Mapping(target = "especialidades", ignore = true)
     @Mapping(target = "horarioAtencion", ignore = true)
     @Mapping(target = "activo", constant = "true")
-    Doctor registerDtoToEntity(CreateDcotorDTO dto);
+    Doctor registerDtoToEntity(CreateDcotorDto dto);
 
 
     DetalleDoctorDto entityToDto(Doctor doctor);

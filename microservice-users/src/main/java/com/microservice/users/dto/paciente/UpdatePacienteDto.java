@@ -1,12 +1,12 @@
 package com.microservice.users.dto.paciente;
 
-import com.microservice.users.dto.user.UpdateUserWithNoRolesDTO;
+import com.microservice.users.dto.user.UpdateUserWithNoRolesDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 
-public record UpdatePacienteDTO(
+public record UpdatePacienteDto(
         @Valid
-        UpdateUserWithNoRolesDTO userUpdate,
+        UpdateUserWithNoRolesDto userUpdate,
 
         @Pattern(regexp = "^(?!\\s*$).+", message = "The address cannot be blank")
         String direccion,
