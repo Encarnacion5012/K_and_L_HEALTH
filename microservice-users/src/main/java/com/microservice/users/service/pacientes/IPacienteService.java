@@ -8,6 +8,7 @@ import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,7 +21,7 @@ void desactivarPaciente(UUID id);
 void reactivarPaciente(UUID id);
 DetallesPacienteProjection getByIdPaciente(UUID idPaciente);
 DetallesPacienteProjection findByEmail(String email);
-DetallesPacienteProjection findAllByTelefono(String telefono);
+List<DetallesPacienteProjection> findAllByTelefono(String telefono);
 Paciente findByIdAuthentication(UUID id_authentication);
 DetallesPacienteProjection findByCedula(String cedula);
 

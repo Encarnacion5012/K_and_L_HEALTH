@@ -20,7 +20,7 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
     Optional<DetallesPacienteProjection> findByCedulaAndActivoTrue(String cedula);
     Optional<DetallesPacienteProjection> findByIdPacienteAndActivoTrue(UUID idPaciente);
     Optional<DetallesPacienteProjection> findByActivoTrueAndEmail(String email);
-    Optional<DetallesPacienteProjection> findAllByActivoTrueAndTelefono(String telefono);
+    Optional<List<DetallesPacienteProjection>> findAllByActivoTrueAndTelefono(String telefono);
 
 
 }

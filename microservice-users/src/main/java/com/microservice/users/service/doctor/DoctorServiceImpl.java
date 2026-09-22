@@ -3,7 +3,6 @@ package com.microservice.users.service.doctor;
 import com.microservice.users.dto.doctor.CreateDcotorDto;
 import com.microservice.users.dto.doctor.DetalleDoctorDto;
 import com.microservice.users.mapper.DoctorMapperService;
-import com.microservice.users.mapper.EspecialidadMappperService;
 import com.microservice.users.mapper.HorarioATencionMapperService;
 import com.microservice.users.model.Doctor;
 import com.microservice.users.model.Especialidad;
@@ -74,9 +73,6 @@ public class DoctorServiceImpl implements IDoctorService {
                 throw new RuntimeException("Error al eliminar el doctor con id_autorization: " + newIdAuthenticationDoctor, ex);
             }
         }
-
-
-
 
         return doctorMapperService.entityToDto(newDoctor);
     }

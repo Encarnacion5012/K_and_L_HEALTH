@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -118,7 +119,7 @@ public class PacienteServiceImpl implements IPacienteService {
     }
 
     @Override
-    public DetallesPacienteProjection findAllByTelefono(String telefono) {
+    public List<DetallesPacienteProjection> findAllByTelefono(String telefono) {
         return pacienteRepository.findAllByActivoTrueAndTelefono(telefono)
                 .orElseThrow(()-> new EntityNotFoundException("Ningun Paciente no encontrado con telefono: " + telefono));
     }
