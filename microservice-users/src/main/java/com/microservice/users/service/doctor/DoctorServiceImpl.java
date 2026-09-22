@@ -34,7 +34,6 @@ public class DoctorServiceImpl implements IDoctorService {
     private  final DoctorRepository doctorRepository;
     private final DoctorMapperService doctorMapperService;
     private final IkeycloakService keycloakService;
-    private final EspecialidadMappperService especialidadMappperService;
     private final HorarioATencionMapperService horarioATencionMapperService;
     private final HorarioAtencionRepository horarioAtencionRepository;
     private final EspecialidadRepository especialidadRepository;
@@ -43,33 +42,38 @@ public class DoctorServiceImpl implements IDoctorService {
     @Override
     @Transactional
     public DetalleDoctorDto createDoctor(CreateDcotorDto createDTO) {
-        String uuidDoctor;
-        try {
-            uuidDoctor =  keycloakService.createUserDoctor(createDTO.userRegister());
-        }catch (Exception e){
+        String newIdAuthenticationDoctor = keycloakService.createUserDoctor(createDTO.userRegister());
 
-          throw new RuntimeException("Error creating user doctor " + e.getMessage(), e);
-
+        if (newIdAuthenticationDoctor == null) {
+            throw new EntityNotFoundException("Hubo un error al crear el nuevo doctor en el servicio de auntenticacion, el id de autenticacion es nulo");
         }
 
+
         Doctor newDoctor = doctorMapperService.registerDtoToEntity(createDTO);
-        newDoctor.setIdAuthentication(UUID.fromString(uuidDoctor));
+        try{
+            newDoctor.setIdAuthentication(UUID.fromString(newIdAuthenticationDoctor));
 
-        doctorRepository.save(newDoctor);
+            doctorRepository.save(newDoctor);
 
-        Set<Especialidad> especialidades = new HashSet<>(especialidadRepository.findAllById(createDTO.idEspecialidades()));
+            Set<Especialidad> especialidades = new HashSet<>(especialidadRepository.findAllById(createDTO.idEspecialidades()));
 
 
-        List<HorarioAtencion> horarioAtencion = createDTO.horarioAtencion().stream()
-                .map(horarioATencionMapperService::registerDtoToEntity)
-                .toList();
+            List<HorarioAtencion> horarioAtencion = createDTO.horarioAtencion().stream()
+                    .map(horarioATencionMapperService::registerDtoToEntity)
+                    .toList();
 
-        newDoctor.helperRelacionHoracioATencios(horarioAtencion);
+            newDoctor.helperRelacionHoracioATencios(horarioAtencion);
 
-        newDoctor.helperRelacionEspecialidad(especialidades);
+            newDoctor.helperRelacionEspecialidad(especialidades);
 
-        horarioAtencionRepository.saveAll(horarioAtencion);
-
+            horarioAtencionRepository.saveAll(horarioAtencion);
+        } catch (Exception e) {
+            try{
+                keycloakService.deleteUser(newIdAuthenticationDoctor);
+            }catch (Exception ex){
+                throw new RuntimeException("Error al eliminar el doctor con id_autorization: " + newIdAuthenticationDoctor, ex);
+            }
+        }
 
 
 

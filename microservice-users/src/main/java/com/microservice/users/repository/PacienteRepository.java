@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,8 +17,12 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
 
 
     Optional<Paciente> findByIdAuthentication(UUID uuid);
-    Optional<Paciente> findByCedula(String cedula);
-    Optional<DetallesPacienteProjection> findByIdPaciente(UUID idPaciente);
+    Optional<DetallesPacienteProjection> findByCedulaAndActivoTrue(String cedula);
+    Optional<DetallesPacienteProjection> findByIdPacienteAndActivoTrue(UUID idPaciente);
+    Optional<DetallesPacienteProjection> findByActivoTrueAndEmail(String email);
+    Optional<DetallesPacienteProjection> findAllByActivoTrueAndTelefono(String telefono);
+
+
 }
 
 

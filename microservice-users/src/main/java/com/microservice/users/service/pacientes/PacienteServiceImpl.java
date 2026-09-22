@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -30,19 +31,24 @@ public class PacienteServiceImpl implements IPacienteService {
     @Transactional
     public DetallePacienteDto create(CreatePacienteDto createPacienteDTO) {
 
-       UUID idAuthorizationNewUser = UUID.fromString(keycloakService.createUserPacinte(createPacienteDTO.userRegisterDto())) ;
+       String idAuthorizationNewUser = keycloakService.createUserPacinte(createPacienteDTO.userRegisterDto());
         if (idAuthorizationNewUser == null) {
             throw new RuntimeException("No se puede crear un Paciente, ha habido un error");
         }
-        Paciente nuevoPaciente;
-        nuevoPaciente = pacienteMapperService.createDTOtoEntity(createPacienteDTO);
+        Paciente nuevoPaciente = pacienteMapperService.createDTOtoEntity(createPacienteDTO);
+        try {
+            nuevoPaciente.setIdAuthentication(UUID.fromString(idAuthorizationNewUser));
 
+            pacienteRepository.save(nuevoPaciente);
 
-        nuevoPaciente.setIdAuthentication(idAuthorizationNewUser);
-
-        pacienteRepository.save(nuevoPaciente);
-       return pacienteMapperService.entityToDTO(nuevoPaciente);
-
+        }catch (Exception e){
+            try{
+                keycloakService.deleteUser(idAuthorizationNewUser);
+            }catch (Exception ex){
+                throw new RuntimeException("Error al eliminar el Paciente con id_autorization: " + idAuthorizationNewUser);
+            }
+        }
+        return pacienteMapperService.entityToDTO(nuevoPaciente);
     }
 
     @Override
@@ -101,7 +107,31 @@ public class PacienteServiceImpl implements IPacienteService {
 
     @Override
     public DetallesPacienteProjection getByIdPaciente(UUID idPaciente) {
-        return pacienteRepository.findByIdPaciente(idPaciente)
+        return pacienteRepository.findByIdPacienteAndActivoTrue(idPaciente)
                 .orElseThrow(()-> new EntityNotFoundException("Paciente no encontrado"));
+    }
+
+    @Override
+    public DetallesPacienteProjection findByEmail(String email) {
+        return pacienteRepository.findByActivoTrueAndEmail(email)
+                .orElseThrow(()-> new EntityNotFoundException("Paciente no encontrado con email: " + email));
+    }
+
+    @Override
+    public DetallesPacienteProjection findAllByTelefono(String telefono) {
+        return pacienteRepository.findAllByActivoTrueAndTelefono(telefono)
+                .orElseThrow(()-> new EntityNotFoundException("Ningun Paciente no encontrado con telefono: " + telefono));
+    }
+
+    @Override
+    public Paciente findByIdAuthentication(UUID id_authentication) {
+        return pacienteRepository.findByIdAuthentication(id_authentication)
+                .orElseThrow(()-> new EntityNotFoundException("Paciente no encontrado con authentication_id: " + id_authentication));
+    }
+
+    @Override
+    public DetallesPacienteProjection findByCedula(String cedula) {
+        return pacienteRepository.findByCedulaAndActivoTrue(cedula)
+                .orElseThrow(()-> new EntityNotFoundException("Ningun paciente encntrado con la cedula: " + cedula));
     }
 }
