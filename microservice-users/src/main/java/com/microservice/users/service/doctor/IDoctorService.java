@@ -14,4 +14,10 @@ public interface IDoctorService {
     void desactivarDoctor(UUID idDoctor);
     void reactivarDoctor(UUID idDoctor);
     DetallesDoctorProjection findAllByIdDoctor(UUID idDoctor);
+    Page<DetallesDoctorProjection> findALlByEspecialidad (String nombreEspecialidad, Pageable pageable);
+    DetallesDoctorProjection findByExequatur(String exequatur);
+    DetallesDoctorProjection findBYIdAuthentication(UUID idAuthentication);
+    DetallesDoctorProjection findByCedula(String cedula);
+
+
 }

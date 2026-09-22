@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/doctor")
@@ -36,5 +37,43 @@ public class DoctorController {
     public ResponseEntity<Page<DetallesDoctorProjection>> findAll(@PageableDefault(size = 10, sort = "idDoctor") Pageable pageable) {
         Page<DetallesDoctorProjection> doctores = doctorService.findAllACtivo(pageable);
         return ResponseEntity.ok(doctores);
+    }
+
+    @GetMapping("/especiality/{especiality_Name}")
+    public ResponseEntity<Page<DetallesDoctorProjection>>  findByEspeciality(@PathVariable String especiality_Name, @PageableDefault(size = 10, sort = {"nombre"}) Pageable pageable) {
+        Page<DetallesDoctorProjection> doctores = doctorService.findALlByEspecialidad(especiality_Name, pageable);
+        return ResponseEntity.ok(doctores);
+    }
+
+    @GetMapping("/exequatur/{exequatur}")
+    public ResponseEntity<DetallesDoctorProjection> findByExequatur(@PathVariable String exequatur) {
+        DetallesDoctorProjection doctor = doctorService.findByExequatur(exequatur);
+        return ResponseEntity.ok(doctor);
+    }
+
+    @PutMapping("/desctivate/{id_doctor}")
+    public ResponseEntity<Void> desactivateDoctor(@PathVariable UUID id_doctor) {
+        doctorService.desactivarDoctor(id_doctor);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/desctivate/{id_doctor}")
+    public ResponseEntity<Void> reactivateDoctor(@PathVariable UUID id_doctor) {
+        doctorService.reactivarDoctor(id_doctor);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/find_by_cedula/{cedula_doctor}")
+    public ResponseEntity<DetallesDoctorProjection> findByCedula(@PathVariable String cedula_doctor) {
+        DetallesDoctorProjection doctor = doctorService.findByCedula(cedula_doctor);
+        return ResponseEntity.ok(doctor);
+    }
+
+    @GetMapping("/find_by_id/{id_Doctor}")
+    public ResponseEntity<DetallesDoctorProjection> findById(@PathVariable UUID id_Doctor) {
+        DetallesDoctorProjection doctor = doctorService.findAllByIdDoctor(id_Doctor);
+        return ResponseEntity.ok(doctor);
     }
 }

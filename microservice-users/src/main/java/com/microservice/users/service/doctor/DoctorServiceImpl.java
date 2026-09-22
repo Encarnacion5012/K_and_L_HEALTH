@@ -123,4 +123,27 @@ public class DoctorServiceImpl implements IDoctorService {
         return doctorRepository.findAllByIdDoctor(idDoctor)
                 .orElseThrow(()-> new EntityNotFoundException("Doctor no encontrado con el id: " + idDoctor));
     }
+
+    @Override
+    public Page<DetallesDoctorProjection> findALlByEspecialidad(String nombreEspecialidad, Pageable pageable) {
+        return doctorRepository.findAllByEspecialidades_NombreEspecialidad(nombreEspecialidad, pageable);
+    }
+
+    @Override
+    public DetallesDoctorProjection findByExequatur(String exequatur) {
+        return doctorRepository.findByExequatur(exequatur)
+                .orElseThrow(()-> new EntityNotFoundException("Doctor no encontrado con el exequatur: " + exequatur));
+    }
+
+    @Override
+    public DetallesDoctorProjection findBYIdAuthentication(UUID idAuthentication) {
+        return doctorRepository.findByIdAuthentication(idAuthentication)
+                .orElseThrow(()-> new EntityNotFoundException("Doctor no encontrado con el id_Authentication: " + idAuthentication));
+    }
+
+    @Override
+    public DetallesDoctorProjection findByCedula(String cedula) {
+        return doctorRepository.findByCedula(cedula)
+                .orElseThrow(()-> new EntityNotFoundException("Doctor no encontrado con cedula: " + cedula));
+    }
 }

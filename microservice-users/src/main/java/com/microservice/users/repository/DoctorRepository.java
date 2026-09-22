@@ -18,4 +18,18 @@ public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
 
     @EntityGraph(attributePaths = {"horarioAtencion", "especialidades"})
     Optional<DetallesDoctorProjection> findAllByIdDoctor(UUID idDoctor);
+
+    @EntityGraph(attributePaths = {"horarioAtencion", "especialidades"})
+    Page<DetallesDoctorProjection> findAllByEspecialidades_NombreEspecialidad (String nombreEspecialidad, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"horarioAtencion", "especialidades"})
+    Optional<DetallesDoctorProjection> findByExequatur(String exequatur);
+
+    @EntityGraph(attributePaths = {"horarioAtencion", "especialidades"})
+    Optional<DetallesDoctorProjection> findByCedula(String cedula);
+
+    @EntityGraph(attributePaths = {"horarioAtencion", "especialidades"})
+    Optional<DetallesDoctorProjection> findByIdAuthentication(UUID idAuthentication);
+
+
 }
