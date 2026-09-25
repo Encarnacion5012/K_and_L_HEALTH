@@ -4,7 +4,6 @@ package com.microservice.users.controller;
 import com.microservice.users.dto.paciente.CreatePacienteDto;
 import com.microservice.users.dto.paciente.DetallePacienteDto;
 import com.microservice.users.dto.paciente.UpdatePacienteDto;
-import com.microservice.users.model.Paciente;
 import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
 import com.microservice.users.service.pacientes.IPacienteService;
 

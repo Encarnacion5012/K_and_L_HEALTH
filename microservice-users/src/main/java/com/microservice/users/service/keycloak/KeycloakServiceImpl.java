@@ -228,4 +228,28 @@ public class KeycloakServiceImpl implements IkeycloakService {
         }
 
     }
+
+    @Override
+    public UpdateUserWithNoRolesDto getUserUpdateData(String userId) {
+        try {
+            UserResource userResource = KeycloakProvider.getUserResource().get(userId);
+            UserRepresentation user = userResource.toRepresentation();
+
+            if (user == null) {
+                throw new RuntimeException("Usuario no encontrado en Keycloak con ID: " + userId);
+            }
+
+            // Se construye el snapshot con el estado actual del usuario
+            return new UpdateUserWithNoRolesDto(
+                    user.getUsername(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getEmail()
+            );
+
+        } catch (Exception e) {
+            log.error("Error al obtener snapshot previo del usuario {} en Keycloak: {}", userId, e.getMessage());
+            throw new RuntimeException("Error al consultar datos previos en el servidor de autenticación para ID: " + userId, e);
+        }
+    }
 }

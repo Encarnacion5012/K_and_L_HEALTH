@@ -72,6 +72,8 @@ public class DoctorServiceImpl implements IDoctorService {
             }catch (Exception ex){
                 throw new RuntimeException("Error al eliminar el doctor con id_autorization: " + newIdAuthenticationDoctor, ex);
             }
+
+            throw new RuntimeException("Hubo un problema al crear el nuevo doctor: " + e.getMessage());
         }
 
         return doctorMapperService.entityToDto(newDoctor);

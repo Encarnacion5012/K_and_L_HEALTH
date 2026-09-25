@@ -3,6 +3,7 @@ package com.microservice.users.service.pacientes;
 import com.microservice.users.dto.paciente.CreatePacienteDto;
 import com.microservice.users.dto.paciente.DetallePacienteDto;
 import com.microservice.users.dto.paciente.UpdatePacienteDto;
+import com.microservice.users.dto.user.UpdateUserWithNoRolesDto;
 import com.microservice.users.mapper.PacienteMapperService;
 import com.microservice.users.model.Paciente;
 import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
@@ -48,6 +49,8 @@ public class PacienteServiceImpl implements IPacienteService {
             }catch (Exception ex){
                 throw new RuntimeException("Error al eliminar el Paciente con id_autorization: " + idAuthorizationNewUser);
             }
+
+            throw new RuntimeException("Hubo un problema al crear el nuevo Paciente: " + e.getMessage());
         }
         return pacienteMapperService.entityToDTO(nuevoPaciente);
     }
@@ -62,11 +65,34 @@ public class PacienteServiceImpl implements IPacienteService {
     public DetallePacienteDto update(UUID id, UpdatePacienteDto updateDTO) {
 
         Paciente paciente = findEntityByIdHelper(id);
+        UpdateUserWithNoRolesDto snapshotAntesDeActulizacion;
+
+        try{
+             snapshotAntesDeActulizacion = keycloakService.getUserUpdateData(paciente.getIdAuthentication().toString());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al obtener el estado previo antes de actulizar con el usuario: " + paciente.getIdAuthentication().toString());
+        }
+
+        try{
+            keycloakService.updateUserNoRoles(paciente.getIdAuthentication().toString(), updateDTO.userUpdate());
+        }catch (Exception e){
+            throw new RuntimeException("Error al actualizar el Paciente con id_autorization: " + paciente.getIdAuthentication());
+        }
 
 
-        keycloakService.updateUserNoRoles(paciente.getIdAuthentication().toString(), updateDTO.userUpdate());
+        try {
+            pacienteMapperService.updatePaciente(updateDTO, paciente);
+            pacienteRepository.flush();
 
-        pacienteMapperService.updatePaciente(updateDTO, paciente);
+        } catch (Exception e) {
+            try{
+                keycloakService.updateUserNoRoles(paciente.getIdAuthentication().toString(), snapshotAntesDeActulizacion);
+            } catch (Exception ex) {
+                throw new RuntimeException("Ha habido un error al hacer rollback del Paciente");
+            }
+
+            throw new RuntimeException("Ha ocurrido un error al actulizar la data del paciente");
+        }
 
 
         return pacienteMapperService.entityToDTO(paciente);
