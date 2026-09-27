@@ -2,6 +2,7 @@ package com.microservice.users.service.doctor;
 
 import com.microservice.users.dto.doctor.CreateDcotorDto;
 import com.microservice.users.dto.doctor.DetalleDoctorDto;
+import com.microservice.users.dto.doctor.UpdateDoctorDto;
 import com.microservice.users.projections.doctor.DetallesDoctorProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,6 @@ public interface IDoctorService {
     DetallesDoctorProjection findByExequatur(String exequatur);
     DetallesDoctorProjection findBYIdAuthentication(UUID idAuthentication);
     DetallesDoctorProjection findByCedula(String cedula);
-
+    DetalleDoctorDto updateDoctor(UUID idDoctor, UpdateDoctorDto updateDTO);
 
 }

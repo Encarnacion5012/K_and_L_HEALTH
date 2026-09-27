@@ -30,5 +30,12 @@ public interface PacienteMapperService {
     @Mapping(target = "nombre", source = "dto.userUpdate.firstName")
     @Mapping(target = "apellido", source = "dto.userUpdate.lastName")
     @Mapping(target = "email", source = "dto.userUpdate.email")
+    @Mapping(target = "activo", ignore = true)
+    @Mapping(target = "cedula", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "fechaDesactivacion", ignore = true)
+    @Mapping(target = "fechaNacimiento", ignore = true)
+    @Mapping(target = "idAuthentication",  ignore = true)
+    @Mapping(target = "idPaciente",  ignore = true)
     void updatePaciente(UpdatePacienteDto dto, @MappingTarget Paciente paciente);
 }

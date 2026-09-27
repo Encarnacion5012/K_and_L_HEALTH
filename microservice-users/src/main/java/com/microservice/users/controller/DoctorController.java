@@ -4,6 +4,7 @@ package com.microservice.users.controller;
 
 import com.microservice.users.dto.doctor.CreateDcotorDto;
 import com.microservice.users.dto.doctor.DetalleDoctorDto;
+import com.microservice.users.dto.doctor.UpdateDoctorDto;
 import com.microservice.users.projections.doctor.DetallesDoctorProjection;
 import com.microservice.users.service.doctor.IDoctorService;
 import lombok.RequiredArgsConstructor;
@@ -79,5 +80,12 @@ public class DoctorController {
     public ResponseEntity<DetallesDoctorProjection> findById(@PathVariable UUID id_Doctor) {
         DetallesDoctorProjection doctor = doctorService.findAllByIdDoctor(id_Doctor);
         return ResponseEntity.ok(doctor);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/update/{id_doctor}")
+    public ResponseEntity<DetalleDoctorDto> updateDotor(@PathVariable UUID id_doctor, @RequestBody UpdateDoctorDto updateDTO) {
+        DetalleDoctorDto doctorActualizado =  doctorService.updateDoctor(id_doctor, updateDTO);
+        return ResponseEntity.ok(doctorActualizado);
     }
 }

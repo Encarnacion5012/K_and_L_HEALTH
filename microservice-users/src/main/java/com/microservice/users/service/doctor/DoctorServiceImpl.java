@@ -2,6 +2,8 @@ package com.microservice.users.service.doctor;
 
 import com.microservice.users.dto.doctor.CreateDcotorDto;
 import com.microservice.users.dto.doctor.DetalleDoctorDto;
+import com.microservice.users.dto.doctor.UpdateDoctorDto;
+import com.microservice.users.dto.user.UpdateUserWithNoRolesDto;
 import com.microservice.users.mapper.DoctorMapperService;
 import com.microservice.users.mapper.HorarioATencionMapperService;
 import com.microservice.users.model.Doctor;
@@ -101,7 +103,7 @@ public class DoctorServiceImpl implements IDoctorService {
         try {
             keycloakService.changeEnabledState(doctor.getIdAuthentication().toString(), false);
         }catch (Exception e){
-            throw new RuntimeException("Error deleting user doctor " + e.getMessage(), e);
+            throw new RuntimeException("Error al deactivar user doctor " + e.getMessage(), e);
         }
 
         doctor.desactivarDoctor();
@@ -147,5 +149,47 @@ public class DoctorServiceImpl implements IDoctorService {
     public DetallesDoctorProjection findByCedula(String cedula) {
         return doctorRepository.findByCedula(cedula)
                 .orElseThrow(()-> new EntityNotFoundException("Doctor no encontrado con cedula: " + cedula));
+    }
+
+    @Override
+    @Transactional
+    public DetalleDoctorDto updateDoctor(UUID idDoctor, UpdateDoctorDto updateDTO) {
+        UpdateUserWithNoRolesDto snapShot;
+        Doctor doctor = findEntityByIdHelper(idDoctor);;
+
+        try {
+           snapShot = keycloakService.getUserUpdateData(doctor.getIdAuthentication().toString());
+        }catch (Exception e){
+            throw new RuntimeException("Error usuario no encontrado en keycloak, id: "  +  idDoctor.toString());
+        }
+
+        try {
+
+            doctorMapperService.update(updateDTO, doctor);
+
+            if (updateDTO.id_Especialidades() != null){
+                Set<Especialidad> nuevasEspecialidades = new HashSet<>(especialidadRepository.findAllById(updateDTO.id_Especialidades())    );
+                if  (updateDTO.id_Especialidades().size() != nuevasEspecialidades.size()){
+                    throw new EntityNotFoundException("Hubo alguna especialidad no encontrada");
+                }
+
+                doctor.getEspecialidades().clear();
+                doctor.helperRelacionEspecialidad(nuevasEspecialidades);
+            }
+
+            doctorRepository.flush();
+        }catch (Exception e){
+
+            try {
+                keycloakService.updateUserNoRoles(doctor.getIdAuthentication().toString(), snapShot);
+            }catch (Exception ex){
+                throw new RuntimeException("Error critico hacer rolback en keycloak al usuario con id: " + doctor.getIdAuthentication().toString());
+            }
+
+            throw new RuntimeException("Ha ocurrido un errror durante la actulizacion de usuario del usuarios :" + idDoctor.toString() + "el rolback ha sido exitoso");
+        }
+        return  doctorMapperService.entityToDto(doctor);
+
+
     }
 }
