@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
-public record CreateHorarioAtencion(
+public record CreateHorarioAtencionDto(
         @NotNull(message = "El día de la semana es obligatorio")
         DayOfWeek diaDeSemana,
 
