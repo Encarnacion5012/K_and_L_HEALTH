@@ -5,6 +5,9 @@ import com.microservice.users.dto.doctor.DetalleDoctorDto;
 import com.microservice.users.dto.doctor.UpdateDoctorDto;
 import com.microservice.users.dto.doctor.horaiosAtencion.CreateHorarioAtencionDto;
 import com.microservice.users.dto.user.UpdateUserWithNoRolesDto;
+import com.microservice.users.exception.custom.AuthIntegrationException;
+import com.microservice.users.exception.custom.CriticalRollbackException;
+import com.microservice.users.exception.custom.PersistenceCompensatedException;
 import com.microservice.users.mapper.DoctorMapperService;
 import com.microservice.users.mapper.HorarioATencionMapperService;
 import com.microservice.users.model.Doctor;
@@ -31,9 +34,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -99,11 +100,12 @@ public class DoctorServiceImplTest {
         DetalleDoctorDto resultado = doctorServiceImpl.createDoctor(createDto);
 
         assertThat(resultado).isNotNull().isEqualTo(detalleDto);
-        verify(doctorRepository).save(doctor);
+        verify(keycloakService).createUserDoctor(any());
         verify(doctorMapperService).registerDtoToEntity(createDto);
-        verify(horarioAtencionRepository).saveAll(anyList());
+        verify(doctorRepository).save(doctor);
         verify(especialidadRepository).findAllById(any());
-        verify(horarioATencionMapperService).registerDtoToEntity(horarioDto);
+        verify(horarioAtencionRepository).saveAll(anyList());
+        verify(doctorMapperService).entityToDto(doctor);
         verify(keycloakService, never()).deleteUser(anyString());
     }
 
@@ -117,11 +119,15 @@ public class DoctorServiceImplTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Hubo un error al crear el nuevo doctor en el servicio de auntenticacion, el id de autenticacion es nulo");
 
+        verify(keycloakService).createUserDoctor(any());
+        verify(doctorMapperService, never()).registerDtoToEntity(any());
         verify(doctorRepository, never()).save(any());
+        verify(horarioAtencionRepository, never()).saveAll(anyList());
+        verify(keycloakService, never()).deleteUser(anyString());
     }
 
     @Test
-    @DisplayName("Debe ejecutar compensación (borrar usuario en Keycloak) si falla la BD al crear doctor")
+    @DisplayName("Debe ejecutar compensación y lanzar PersistenceCompensatedException si falla la BD al crear doctor")
     void createDoctor_FalloDB_EjecutaCompensacion() {
         CreateDcotorDto createDto = mock(CreateDcotorDto.class);
         when(keycloakService.createUserDoctor(any())).thenReturn(authId.toString());
@@ -129,15 +135,18 @@ public class DoctorServiceImplTest {
         doThrow(new RuntimeException("Error de duplicidad en Postgres")).when(doctorRepository).save(doctor);
 
         assertThatThrownBy(() -> doctorServiceImpl.createDoctor(createDto))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(PersistenceCompensatedException.class)
                 .hasMessage("Hubo un problema al crear el nuevo doctor: Error de duplicidad en Postgres");
 
+        verify(keycloakService).createUserDoctor(any());
+        verify(doctorRepository).save(doctor);
         verify(keycloakService).deleteUser(authId.toString());
+        verify(horarioAtencionRepository, never()).saveAll(anyList());
         verify(doctorMapperService, never()).entityToDto(any());
     }
 
     @Test
-    @DisplayName("Debe lanzar excepción crítica si falla tanto la BD como el borrado de compensación en Keycloak")
+    @DisplayName("Debe lanzar CriticalRollbackException si falla tanto la BD como el borrado de compensación en Keycloak")
     void createDoctor_FalloDB_FalloCompensacionKeycloak() {
         CreateDcotorDto createDto = mock(CreateDcotorDto.class);
         when(keycloakService.createUserDoctor(any())).thenReturn(authId.toString());
@@ -146,8 +155,13 @@ public class DoctorServiceImplTest {
         doThrow(new RuntimeException("Keycloak caído")).when(keycloakService).deleteUser(authId.toString());
 
         assertThatThrownBy(() -> doctorServiceImpl.createDoctor(createDto))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(CriticalRollbackException.class)
                 .hasMessage("Error al eliminar el doctor con id_autorization: " + authId);
+
+        verify(keycloakService).createUserDoctor(any());
+        verify(doctorRepository).save(doctor);
+        verify(keycloakService).deleteUser(authId.toString());
+        verify(doctorMapperService, never()).entityToDto(any());
     }
 
     // =========================================================================
@@ -161,17 +175,17 @@ public class DoctorServiceImplTest {
         DetalleDoctorDto detalleDto = mock(DetalleDoctorDto.class);
         UpdateUserWithNoRolesDto snapShot = mock(UpdateUserWithNoRolesDto.class);
         UpdateUserWithNoRolesDto nuevosDatosUser = mock(UpdateUserWithNoRolesDto.class);
+        String authIdStr = authId.toString();
 
         Integer espId = 2;
         Especialidad nuevaEsp = new Especialidad();
         nuevaEsp.setIdEspecialidad(espId);
         nuevaEsp.setDoctors(new HashSet<>());
 
-
         when(updateDto.id_Especialidades()).thenReturn(Set.of(espId));
         when(updateDto.userUpdate()).thenReturn(nuevosDatosUser);
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
-        when(keycloakService.getUserUpdateData(authId.toString())).thenReturn(snapShot);
+        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShot);
         when(especialidadRepository.findAllById(any())).thenReturn(List.of(nuevaEsp));
         when(doctorMapperService.entityToDto(doctor)).thenReturn(detalleDto);
 
@@ -180,99 +194,146 @@ public class DoctorServiceImplTest {
         assertThat(resultado).isNotNull().isEqualTo(detalleDto);
         assertThat(doctor.getEspecialidades()).containsExactly(nuevaEsp);
 
-        verify(keycloakService).getUserUpdateData(authId.toString());
-        verify(keycloakService).updateUserNoRoles(authId.toString(), nuevosDatosUser);
+        verify(doctorRepository).findById(doctorId);
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(authIdStr, nuevosDatosUser);
         verify(doctorMapperService).update(updateDto, doctor);
+        verify(especialidadRepository).findAllById(Set.of(espId));
         verify(doctorRepository).flush();
-        verify(keycloakService, never()).updateUserNoRoles(authId.toString(), snapShot);
+        verify(doctorMapperService).entityToDto(doctor);
+        verify(keycloakService, never()).updateUserNoRoles(authIdStr, snapShot);
     }
 
     @Test
-    @DisplayName("Update falla si no puede obtener el snapshot inicial de Keycloak")
+    @DisplayName("Update lanza AuthIntegrationException si no puede obtener el snapshot inicial de Keycloak")
     void updateDoctor_FalloSnapshotKeycloak() {
         UpdateDoctorDto updateDto = mock(UpdateDoctorDto.class);
+        String authIdStr = authId.toString();
+
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
         doThrow(new RuntimeException("Keycloak error"))
-                .when(keycloakService).getUserUpdateData(authId.toString());
+                .when(keycloakService).getUserUpdateData(authIdStr);
 
         assertThatThrownBy(() -> doctorServiceImpl.updateDoctor(doctorId, updateDto))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(AuthIntegrationException.class)
                 .hasMessage("Error usuario no encontrado en keycloak, id: " + doctorId);
 
+        verify(doctorRepository).findById(doctorId);
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService, never()).updateUserNoRoles(anyString(), any());
         verify(doctorMapperService, never()).update(any(), any());
         verify(doctorRepository, never()).flush();
     }
 
     @Test
-    @DisplayName("Update ejecuta rollback en Keycloak si alguna especialidad enviada no existe en BD")
+    @DisplayName("Update lanza AuthIntegrationException si falla la actualización inicial en Keycloak")
+    void updateDoctor_FalloActualizarKeycloak() {
+        UpdateDoctorDto updateDto = mock(UpdateDoctorDto.class);
+        UpdateUserWithNoRolesDto snapShot = mock(UpdateUserWithNoRolesDto.class);
+        String authIdStr = authId.toString();
+
+        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
+        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShot);
+        doThrow(new RuntimeException("Error en Keycloak"))
+                .when(keycloakService).updateUserNoRoles(eq(authIdStr), any());
+
+        assertThatThrownBy(() -> doctorServiceImpl.updateDoctor(doctorId, updateDto))
+                .isInstanceOf(AuthIntegrationException.class)
+                .hasMessage("Error al actualizar el Doctor en keycloak con id_auth: " + authId);
+
+        verify(doctorRepository).findById(doctorId);
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(eq(authIdStr), any());
+        verify(doctorMapperService, never()).update(any(), any());
+        verify(especialidadRepository, never()).findAllById(any());
+        verify(doctorRepository, never()).flush();
+    }
+
+    @Test
+    @DisplayName("Update ejecuta rollback y lanza PersistenceCompensatedException si alguna especialidad no existe en BD")
     void updateDoctor_EspecialidadNoEncontrada_EjecutaRollback() {
         UpdateDoctorDto updateDto = mock(UpdateDoctorDto.class);
         UpdateUserWithNoRolesDto snapShot = mock(UpdateUserWithNoRolesDto.class);
         UpdateUserWithNoRolesDto nuevosDatosUser = mock(UpdateUserWithNoRolesDto.class);
+        String authIdStr = authId.toString();
         Integer espInexistenteId = 999;
 
         when(updateDto.userUpdate()).thenReturn(nuevosDatosUser);
         when(updateDto.id_Especialidades()).thenReturn(Set.of(espInexistenteId));
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
-        when(keycloakService.getUserUpdateData(authId.toString())).thenReturn(snapShot);
+        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShot);
         when(especialidadRepository.findAllById(any())).thenReturn(Collections.emptyList());
 
         assertThatThrownBy(() -> doctorServiceImpl.updateDoctor(doctorId, updateDto))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(PersistenceCompensatedException.class)
                 .hasMessage("Ha ocurrido un errror durante la actulizacion de usuario del usuarios :" + doctorId + "el rolback ha sido exitoso");
 
-        verify(keycloakService).updateUserNoRoles(authId.toString(), snapShot);
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(authIdStr, nuevosDatosUser);
+        verify(doctorMapperService).update(updateDto, doctor);
+        verify(especialidadRepository).findAllById(Set.of(espInexistenteId));
+        verify(keycloakService).updateUserNoRoles(authIdStr, snapShot);
         verify(doctorRepository, never()).flush();
+        verify(doctorMapperService, never()).entityToDto(any());
     }
 
     @Test
-    @DisplayName("Update ejecuta rollback del snapshot en Keycloak si falla el flush en BD")
+    @DisplayName("Update ejecuta rollback del snapshot y lanza PersistenceCompensatedException si falla el flush en BD")
     void updateDoctor_FalloEnDB_EjecutaRollbackSnapshot() {
         UpdateDoctorDto updateDto = mock(UpdateDoctorDto.class);
         UpdateUserWithNoRolesDto snapShot = mock(UpdateUserWithNoRolesDto.class);
         UpdateUserWithNoRolesDto nuevosDatosUser = mock(UpdateUserWithNoRolesDto.class);
+        String authIdStr = authId.toString();
 
         when(updateDto.userUpdate()).thenReturn(nuevosDatosUser);
         when(updateDto.id_Especialidades()).thenReturn(null);
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
-        when(keycloakService.getUserUpdateData(authId.toString())).thenReturn(snapShot);
+        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShot);
         doThrow(new RuntimeException("Constraint error")).when(doctorRepository).flush();
 
         assertThatThrownBy(() -> doctorServiceImpl.updateDoctor(doctorId, updateDto))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(PersistenceCompensatedException.class)
                 .hasMessage("Ha ocurrido un errror durante la actulizacion de usuario del usuarios :" + doctorId + "el rolback ha sido exitoso");
 
-        verify(keycloakService).updateUserNoRoles(authId.toString(), nuevosDatosUser);
-        verify(keycloakService).updateUserNoRoles(authId.toString(), snapShot);
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(authIdStr, nuevosDatosUser);
+        verify(doctorMapperService).update(updateDto, doctor);
+        verify(doctorRepository).flush();
+        verify(keycloakService).updateUserNoRoles(authIdStr, snapShot);
+        verify(doctorMapperService, never()).entityToDto(any());
     }
 
     @Test
-    @DisplayName("Update lanza excepción crítica si falla la BD y también falla el rollback en Keycloak")
+    @DisplayName("Update lanza CriticalRollbackException si falla la BD y también falla el rollback en Keycloak")
     void updateDoctor_FalloEnDB_FalloRollbackKeycloak() {
         UpdateDoctorDto updateDto = mock(UpdateDoctorDto.class);
         UpdateUserWithNoRolesDto snapShot = mock(UpdateUserWithNoRolesDto.class);
         UpdateUserWithNoRolesDto nuevosDatosUser = mock(UpdateUserWithNoRolesDto.class);
+        String authIdStr = authId.toString();
 
         when(updateDto.userUpdate()).thenReturn(nuevosDatosUser);
         when(updateDto.id_Especialidades()).thenReturn(null);
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
-        when(keycloakService.getUserUpdateData(authId.toString())).thenReturn(snapShot);
-
+        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShot);
 
         doNothing()
                 .doThrow(new RuntimeException("Error en Keycloak"))
-                .when(keycloakService).updateUserNoRoles(eq(authId.toString()), any());
-
-        // Falla la BD al hacer flush
+                .when(keycloakService).updateUserNoRoles(eq(authIdStr), any());
         doThrow(new RuntimeException("Error en BD")).when(doctorRepository).flush();
 
         assertThatThrownBy(() -> doctorServiceImpl.updateDoctor(doctorId, updateDto))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Error critico hacer rolback en keycloak al usuario con id: " + doctor.getIdAuthentication().toString());
+                .isInstanceOf(CriticalRollbackException.class)
+                .hasMessage("Error critico hacer rolback en keycloak al usuario con id: " + authIdStr);
+
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(authIdStr, nuevosDatosUser);
+        verify(doctorRepository).flush();
+        verify(keycloakService).updateUserNoRoles(authIdStr, snapShot);
+        verify(doctorMapperService, never()).entityToDto(any());
     }
 
     // =========================================================================
-    // TESTS FALTANTES: DESACTIVAR Y REACTIVAR DOCTOR
+    // TESTS PARA DESACTIVAR Y REACTIVAR DOCTOR
     // =========================================================================
 
     @Test
@@ -282,22 +343,25 @@ public class DoctorServiceImplTest {
 
         doctorServiceImpl.desactivarDoctor(doctorId);
 
-        verify(keycloakService).changeEnabledState(authId.toString(), false);
         assertThat(doctor.getActivo()).isFalse();
+        verify(doctorRepository).findById(doctorId);
+        verify(keycloakService).changeEnabledState(authId.toString(), false);
     }
 
     @Test
-    @DisplayName("Debe lanzar RuntimeException si Keycloak falla al desactivar doctor")
+    @DisplayName("Debe lanzar AuthIntegrationException si Keycloak falla al desactivar doctor")
     void desactivarDoctor_FalloKeycloak() {
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
         doThrow(new RuntimeException("Keycloak timeout"))
                 .when(keycloakService).changeEnabledState(authId.toString(), false);
 
         assertThatThrownBy(() -> doctorServiceImpl.desactivarDoctor(doctorId))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(AuthIntegrationException.class)
                 .hasMessageContaining("Error al deactivar user doctor");
 
         assertThat(doctor.getActivo()).isTrue();
+        verify(doctorRepository).findById(doctorId);
+        verify(keycloakService).changeEnabledState(authId.toString(), false);
     }
 
     @Test
@@ -308,12 +372,13 @@ public class DoctorServiceImplTest {
 
         doctorServiceImpl.reactivarDoctor(doctorId);
 
-        verify(keycloakService).changeEnabledState(authId.toString(), true);
         assertThat(doctor.getActivo()).isTrue();
+        verify(doctorRepository).findById(doctorId);
+        verify(keycloakService).changeEnabledState(authId.toString(), true);
     }
 
     @Test
-    @DisplayName("Debe lanzar RuntimeException si Keycloak falla al reactivar doctor")
+    @DisplayName("Debe lanzar AuthIntegrationException si Keycloak falla al reactivar doctor")
     void reactivarDoctor_FalloKeycloak() {
         doctor.setActivo(false);
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
@@ -321,14 +386,16 @@ public class DoctorServiceImplTest {
                 .when(keycloakService).changeEnabledState(authId.toString(), true);
 
         assertThatThrownBy(() -> doctorServiceImpl.reactivarDoctor(doctorId))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(AuthIntegrationException.class)
                 .hasMessageContaining("Error activating user doctor");
 
         assertThat(doctor.getActivo()).isFalse();
+        verify(doctorRepository).findById(doctorId);
+        verify(keycloakService).changeEnabledState(authId.toString(), true);
     }
 
     // =========================================================================
-    // TESTS FALTANTES: CONSULTAS Y PROYECCIONES (READ-ONLY)
+    // TESTS PARA CONSULTAS Y PROYECCIONES (READ-ONLY)
     // =========================================================================
 
     @Test
@@ -343,6 +410,23 @@ public class DoctorServiceImplTest {
 
         assertThat(resultado).isEqualTo(pageMock);
         verify(doctorRepository).findAllByActivoTrue(pageable);
+        verifyNoInteractions(keycloakService, doctorMapperService);
+    }
+
+    @Test
+    @DisplayName("findALlByEspecialidad debe retornar página filtrada por nombre de especialidad")
+    void findALlByEspecialidad_Exitoso() {
+        String especialidad = "Pediatria";
+        Pageable pageable = mock(Pageable.class);
+        @SuppressWarnings("unchecked")
+        Page<DetallesDoctorProjection> pageMock = mock(Page.class);
+        when(doctorRepository.findAllByEspecialidades_NombreEspecialidad(especialidad, pageable)).thenReturn(pageMock);
+
+        Page<DetallesDoctorProjection> resultado = doctorServiceImpl.findALlByEspecialidad(especialidad, pageable);
+
+        assertThat(resultado).isEqualTo(pageMock);
+        verify(doctorRepository).findAllByEspecialidades_NombreEspecialidad(especialidad, pageable);
+        verifyNoInteractions(keycloakService, doctorMapperService);
     }
 
     @Test
@@ -354,6 +438,8 @@ public class DoctorServiceImplTest {
         DetallesDoctorProjection resultado = doctorServiceImpl.findAllByIdDoctor(doctorId);
 
         assertThat(resultado).isEqualTo(projection);
+        verify(doctorRepository).findAllByIdDoctor(doctorId);
+        verifyNoInteractions(keycloakService);
     }
 
     @Test
@@ -364,6 +450,9 @@ public class DoctorServiceImplTest {
         assertThatThrownBy(() -> doctorServiceImpl.findAllByIdDoctor(doctorId))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Doctor no encontrado con el id: " + doctorId);
+
+        verify(doctorRepository).findAllByIdDoctor(doctorId);
+        verifyNoInteractions(keycloakService);
     }
 
     @Test
@@ -376,6 +465,8 @@ public class DoctorServiceImplTest {
         DetallesDoctorProjection resultado = doctorServiceImpl.findByExequatur(exequatur);
 
         assertThat(resultado).isEqualTo(projection);
+        verify(doctorRepository).findByExequatur(exequatur);
+        verifyNoInteractions(keycloakService);
     }
 
     @Test
@@ -387,6 +478,9 @@ public class DoctorServiceImplTest {
         assertThatThrownBy(() -> doctorServiceImpl.findByExequatur(exequatur))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Doctor no encontrado con el exequatur: " + exequatur);
+
+        verify(doctorRepository).findByExequatur(exequatur);
+        verifyNoInteractions(keycloakService);
     }
 
     @Test
@@ -397,6 +491,9 @@ public class DoctorServiceImplTest {
         assertThatThrownBy(() -> doctorServiceImpl.findBYIdAuthentication(authId))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Doctor no encontrado con el id_Authentication: " + authId);
+
+        verify(doctorRepository).findByIdAuthentication(authId);
+        verifyNoInteractions(keycloakService);
     }
 
     @Test
@@ -408,5 +505,8 @@ public class DoctorServiceImplTest {
         assertThatThrownBy(() -> doctorServiceImpl.findByCedula(cedula))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Doctor no encontrado con cedula: " + cedula);
+
+        verify(doctorRepository).findByCedula(cedula);
+        verifyNoInteractions(keycloakService);
     }
 }

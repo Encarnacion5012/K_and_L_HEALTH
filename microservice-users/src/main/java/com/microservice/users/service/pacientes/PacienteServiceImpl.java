@@ -4,6 +4,9 @@ import com.microservice.users.dto.paciente.CreatePacienteDto;
 import com.microservice.users.dto.paciente.DetallePacienteDto;
 import com.microservice.users.dto.paciente.UpdatePacienteDto;
 import com.microservice.users.dto.user.UpdateUserWithNoRolesDto;
+import com.microservice.users.exception.custom.AuthIntegrationException;
+import com.microservice.users.exception.custom.CriticalRollbackException;
+import com.microservice.users.exception.custom.PersistenceCompensatedException;
 import com.microservice.users.mapper.PacienteMapperService;
 import com.microservice.users.model.Paciente;
 import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
@@ -35,7 +38,7 @@ public class PacienteServiceImpl implements IPacienteService {
 
        String idAuthorizationNewUser = keycloakService.createUserPacinte(createPacienteDTO.userRegisterDto());
         if (idAuthorizationNewUser == null) {
-            throw new RuntimeException("No se puede crear un Paciente, ha habido un error");
+            throw new EntityNotFoundException("No se puede crear un Paciente, ha habido un error");
         }
         Paciente nuevoPaciente = pacienteMapperService.createDTOtoEntity(createPacienteDTO);
         try {
@@ -47,10 +50,10 @@ public class PacienteServiceImpl implements IPacienteService {
             try{
                 keycloakService.deleteUser(idAuthorizationNewUser);
             }catch (Exception ex){
-                throw new RuntimeException("Error al eliminar el Paciente con id_autorization: " + idAuthorizationNewUser);
+                throw new CriticalRollbackException("Error al eliminar el Paciente con id_autorization: " + idAuthorizationNewUser);
             }
 
-            throw new RuntimeException("Hubo un problema al crear el nuevo Paciente: " + e.getMessage());
+            throw new PersistenceCompensatedException("Hubo un problema al crear el nuevo Paciente: " + e.getMessage());
         }
         return pacienteMapperService.entityToDTO(nuevoPaciente);
     }
@@ -70,13 +73,13 @@ public class PacienteServiceImpl implements IPacienteService {
         try{
              snapshotAntesDeActulizacion = keycloakService.getUserUpdateData(paciente.getIdAuthentication().toString());
         } catch (Exception e) {
-            throw new RuntimeException("Error al obtener el estado previo antes de actulizar con el usuario: " + paciente.getIdAuthentication().toString());
+            throw new AuthIntegrationException("Error al obtener el estado previo antes de actulizar con el usuario: " + paciente.getIdAuthentication().toString());
         }
 
         try{
             keycloakService.updateUserNoRoles(paciente.getIdAuthentication().toString(), updateDTO.userUpdate());
         }catch (Exception e){
-            throw new RuntimeException("Error al actualizar el Paciente con id_autorization: " + paciente.getIdAuthentication());
+            throw new AuthIntegrationException("Error al actualizar el Paciente con id_autorization: " + paciente.getIdAuthentication());
         }
 
 
@@ -88,10 +91,10 @@ public class PacienteServiceImpl implements IPacienteService {
             try{
                 keycloakService.updateUserNoRoles(paciente.getIdAuthentication().toString(), snapshotAntesDeActulizacion);
             } catch (Exception ex) {
-                throw new RuntimeException("Ha habido un error al hacer rollback del Paciente");
+                throw new CriticalRollbackException("Ha habido un error al hacer rollback del Paciente", ex);
             }
 
-            throw new RuntimeException("Ha ocurrido un error al actulizar la data del paciente");
+            throw new PersistenceCompensatedException("Ha ocurrido un error al actulizar la data del paciente", e);
         }
 
 
@@ -112,7 +115,7 @@ public class PacienteServiceImpl implements IPacienteService {
         try {
             keycloakService.changeEnabledState(paciente.getIdAuthentication().toString(), false);
         }catch (Exception e){
-            throw new  RuntimeException("Error al eliminar el Paciente");
+            throw new AuthIntegrationException("Error al eliminar el Paciente");
         }
         paciente.desactivarPaciente();
     }
@@ -125,7 +128,7 @@ public class PacienteServiceImpl implements IPacienteService {
         try {
             keycloakService.changeEnabledState(paciente.getIdAuthentication().toString(), true);
         }catch (Exception e){
-            throw new  RuntimeException("Error al reactivar el Paciente");
+            throw new AuthIntegrationException("Error al reactivar el Paciente");
         }
 
 

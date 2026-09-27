@@ -4,6 +4,9 @@ import com.microservice.users.dto.doctor.CreateDcotorDto;
 import com.microservice.users.dto.doctor.DetalleDoctorDto;
 import com.microservice.users.dto.doctor.UpdateDoctorDto;
 import com.microservice.users.dto.user.UpdateUserWithNoRolesDto;
+import com.microservice.users.exception.custom.AuthIntegrationException;
+import com.microservice.users.exception.custom.CriticalRollbackException;
+import com.microservice.users.exception.custom.PersistenceCompensatedException;
 import com.microservice.users.mapper.DoctorMapperService;
 import com.microservice.users.mapper.HorarioATencionMapperService;
 import com.microservice.users.model.Doctor;
@@ -72,10 +75,10 @@ public class DoctorServiceImpl implements IDoctorService {
             try{
                 keycloakService.deleteUser(newIdAuthenticationDoctor);
             }catch (Exception ex){
-                throw new RuntimeException("Error al eliminar el doctor con id_autorization: " + newIdAuthenticationDoctor, ex);
+                throw new CriticalRollbackException("Error al eliminar el doctor con id_autorization: " + newIdAuthenticationDoctor, ex);
             }
 
-            throw new RuntimeException("Hubo un problema al crear el nuevo doctor: " + e.getMessage());
+            throw new PersistenceCompensatedException("Hubo un problema al crear el nuevo doctor: " + e.getMessage());
         }
 
         return doctorMapperService.entityToDto(newDoctor);
@@ -103,7 +106,7 @@ public class DoctorServiceImpl implements IDoctorService {
         try {
             keycloakService.changeEnabledState(doctor.getIdAuthentication().toString(), false);
         }catch (Exception e){
-            throw new RuntimeException("Error al deactivar user doctor " + e.getMessage(), e);
+            throw new AuthIntegrationException("Error al deactivar user doctor " + e.getMessage(), e);
         }
 
         doctor.desactivarDoctor();
@@ -117,7 +120,7 @@ public class DoctorServiceImpl implements IDoctorService {
         try {
             keycloakService.changeEnabledState(doctor.getIdAuthentication().toString(), true);
         }catch (Exception e){
-            throw new RuntimeException("Error activating user doctor " + e.getMessage(), e);
+            throw new AuthIntegrationException("Error activating user doctor " + e.getMessage(), e);
         }
         doctor.reactivarDoctor();
     }
@@ -160,13 +163,13 @@ public class DoctorServiceImpl implements IDoctorService {
         try {
            snapShot = keycloakService.getUserUpdateData(doctor.getIdAuthentication().toString());
         }catch (Exception e){
-            throw new RuntimeException("Error usuario no encontrado en keycloak, id: "  +  idDoctor.toString());
+            throw new AuthIntegrationException("Error usuario no encontrado en keycloak, id: "  +  idDoctor.toString());
         }
 
         try {
             keycloakService.updateUserNoRoles(doctor.getIdAuthentication().toString(), updateDTO.userUpdate());
         } catch (Exception e) {
-            throw new RuntimeException("Error al actualizar el Doctor en keycloak con id_auth: " + doctor.getIdAuthentication());
+            throw new AuthIntegrationException("Error al actualizar el Doctor en keycloak con id_auth: " + doctor.getIdAuthentication());
         }
 
         try {
@@ -189,10 +192,10 @@ public class DoctorServiceImpl implements IDoctorService {
             try {
                 keycloakService.updateUserNoRoles(doctor.getIdAuthentication().toString(), snapShot);
             }catch (Exception ex){
-                throw new RuntimeException("Error critico hacer rolback en keycloak al usuario con id: " + doctor.getIdAuthentication().toString());
+                throw new CriticalRollbackException("Error critico hacer rolback en keycloak al usuario con id: " + doctor.getIdAuthentication().toString());
             }
 
-            throw new RuntimeException("Ha ocurrido un errror durante la actulizacion de usuario del usuarios :" + idDoctor.toString() + "el rolback ha sido exitoso");
+            throw new PersistenceCompensatedException("Ha ocurrido un errror durante la actulizacion de usuario del usuarios :" + idDoctor.toString() + "el rolback ha sido exitoso");
         }
         return  doctorMapperService.entityToDto(doctor);
 

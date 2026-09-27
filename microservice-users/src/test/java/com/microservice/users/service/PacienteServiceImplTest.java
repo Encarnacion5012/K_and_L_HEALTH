@@ -4,12 +4,11 @@ import com.microservice.users.dto.paciente.CreatePacienteDto;
 import com.microservice.users.dto.paciente.DetallePacienteDto;
 import com.microservice.users.dto.paciente.UpdatePacienteDto;
 import com.microservice.users.dto.user.UpdateUserWithNoRolesDto;
+import com.microservice.users.exception.custom.AuthIntegrationException;
+import com.microservice.users.exception.custom.CriticalRollbackException;
+import com.microservice.users.exception.custom.PersistenceCompensatedException;
 import com.microservice.users.mapper.PacienteMapperService;
 import com.microservice.users.model.Paciente;
-import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.assertj.core.api.Assertions.*;
-
 import com.microservice.users.projections.pacientes.DetallesPacienteProjection;
 import com.microservice.users.repository.PacienteRepository;
 import com.microservice.users.service.keycloak.IkeycloakService;
@@ -17,15 +16,24 @@ import com.microservice.users.service.pacientes.PacienteServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PacienteServiceImplTest {
@@ -40,15 +48,13 @@ public class PacienteServiceImplTest {
     @InjectMocks
     private PacienteServiceImpl pacienteService;
 
-
-    UUID pacienteId;
-    UUID authId;
-    Paciente paciente;
-
+    private UUID pacienteId;
+    private UUID authId;
+    private Paciente paciente;
 
     @BeforeEach
     public void setUp() {
-        pacienteId = UUID.randomUUID();
+        this.pacienteId = UUID.randomUUID();
         this.authId = UUID.randomUUID();
         this.paciente = new Paciente();
         this.paciente.setIdPaciente(pacienteId);
@@ -56,13 +62,13 @@ public class PacienteServiceImplTest {
         this.paciente.setActivo(true);
     }
 
-
-    //Test para creacion y compensasion en keycloak al ocurrir un error
+    // =========================================================================
+    // TESTS PARA CREATE PACIENTE
+    // =========================================================================
 
     @Test
-    @DisplayName("Debe crear un paciente exitosamente en el servicio de authenticacion y DB")
-    void create_Existoso(){
-
+    @DisplayName("Debe crear un paciente exitosamente en el servicio de autenticación y DB")
+    void create_Exitoso() {
         CreatePacienteDto createPacienteDto = mock(CreatePacienteDto.class);
         DetallePacienteDto detallePacienteDto = mock(DetallePacienteDto.class);
 
@@ -75,49 +81,50 @@ public class PacienteServiceImplTest {
 
         assertThat(resultado).isNotNull().isEqualTo(detallePacienteDto);
         verify(keycloakService).createUserPacinte(any());
+        verify(pacienteMapperService).createDTOtoEntity(createPacienteDto);
         verify(pacienteRepository).save(paciente);
+        verify(pacienteMapperService).entityToDTO(paciente);
         verify(keycloakService, never()).deleteUser(anyString());
     }
 
-
-
     @Test
-    @DisplayName("Debe lanzar una exepcion si el auth sever devuelve un id Null")
-
-    void create_FalloAuthServerRetornaNull(){
+    @DisplayName("Debe lanzar EntityNotFoundException si el auth server devuelve un id Null")
+    void create_FalloAuthServerRetornaNull() {
         CreatePacienteDto createPacienteDto = mock(CreatePacienteDto.class);
 
         when(keycloakService.createUserPacinte(any())).thenReturn(null);
 
         assertThatThrownBy(() -> pacienteService.create(createPacienteDto))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("No se puede crear un Paciente, ha habido un error")
-        ;
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("No se puede crear un Paciente, ha habido un error");
 
+        verify(keycloakService).createUserPacinte(any());
+        verify(pacienteMapperService, never()).createDTOtoEntity(any());
         verify(pacienteRepository, never()).save(any());
+        verify(keycloakService, never()).deleteUser(anyString());
     }
 
     @Test
-    @DisplayName("Debe hacer la compensacion si ocurre un error en la db")
-    void create_FalloCompensacionEjecucionCompensacion(){
+    @DisplayName("Debe ejecutar compensación y lanzar PersistenceCompensatedException si ocurre un error en la DB")
+    void create_FalloCompensacionEjecucionCompensacion() {
         CreatePacienteDto createPacienteDto = mock(CreatePacienteDto.class);
         when(keycloakService.createUserPacinte(any())).thenReturn(authId.toString());
         when(pacienteMapperService.createDTOtoEntity(createPacienteDto)).thenReturn(paciente);
         doThrow(new RuntimeException("Error en postgres")).when(pacienteRepository).save(paciente);
 
         assertThatThrownBy(() -> pacienteService.create(createPacienteDto))
-                .isInstanceOf(RuntimeException.class)
-                        .hasMessage("Hubo un problema al crear el nuevo Paciente: Error en postgres");
+                .isInstanceOf(PersistenceCompensatedException.class)
+                .hasMessage("Hubo un problema al crear el nuevo Paciente: Error en postgres");
 
-
+        verify(keycloakService).createUserPacinte(any());
+        verify(pacienteRepository).save(paciente);
         verify(keycloakService).deleteUser(authId.toString());
         verify(pacienteMapperService, never()).entityToDTO(any());
     }
 
     @Test
-    @DisplayName("Bebe lanzar una exepcion al haber un error cuando se hace la compensacion")
-
-    void create_FalloCompensacionServerRetornaError(){
+    @DisplayName("Debe lanzar CriticalRollbackException al haber un error cuando se hace la compensación")
+    void create_FalloCompensacionServerRetornaError() {
         CreatePacienteDto createPacienteDto = mock(CreatePacienteDto.class);
         when(keycloakService.createUserPacinte(any())).thenReturn(authId.toString());
         when(pacienteMapperService.createDTOtoEntity(createPacienteDto)).thenReturn(paciente);
@@ -125,139 +132,218 @@ public class PacienteServiceImplTest {
         doThrow(new RuntimeException(authId.toString())).when(keycloakService).deleteUser(authId.toString());
 
         assertThatThrownBy(() -> pacienteService.create(createPacienteDto))
-        .isInstanceOf(RuntimeException.class)
-                .hasMessage("Error al eliminar el Paciente con id_autorization: " +  authId.toString());
+                .isInstanceOf(CriticalRollbackException.class)
+                .hasMessage("Error al eliminar el Paciente con id_autorization: " + authId);
 
-
-
+        verify(keycloakService).createUserPacinte(any());
+        verify(pacienteRepository).save(paciente);
+        verify(keycloakService).deleteUser(authId.toString());
+        verify(pacienteMapperService, never()).entityToDTO(any());
     }
 
-    //Tests para update
+    // =========================================================================
+    // TESTS PARA UPDATE PACIENTE
+    // =========================================================================
+
     @Test
     @DisplayName("Update exitoso")
-    void update_UpdateExitoso(){
+    void update_UpdateExitoso() {
         UpdatePacienteDto updatePacienteDto = mock(UpdatePacienteDto.class);
         DetallePacienteDto detallePacienteDto = mock(DetallePacienteDto.class);
+        UpdateUserWithNoRolesDto snapShotUser = mock(UpdateUserWithNoRolesDto.class);
+        UpdateUserWithNoRolesDto nuevosDatosUser = mock(UpdateUserWithNoRolesDto.class);
+        String authIdStr = authId.toString();
 
+        when(updatePacienteDto.userUpdate()).thenReturn(nuevosDatosUser);
         when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
-
+        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShotUser);
         when(pacienteMapperService.entityToDTO(paciente)).thenReturn(detallePacienteDto);
 
         DetallePacienteDto resultado = pacienteService.update(pacienteId, updatePacienteDto);
 
         assertThat(resultado).isNotNull().isEqualTo(detallePacienteDto);
 
-        verify(keycloakService).updateUserNoRoles(paciente.getIdAuthentication().toString(), updatePacienteDto.userUpdate());
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(authIdStr, nuevosDatosUser);
         verify(pacienteMapperService).updatePaciente(updatePacienteDto, paciente);
-        verify(pacienteMapperService).entityToDTO(paciente);
         verify(pacienteRepository).flush();
-
-
+        verify(pacienteMapperService).entityToDTO(paciente);
+        verify(keycloakService, never()).updateUserNoRoles(authIdStr, snapShotUser);
     }
 
     @Test
-    @DisplayName("Update fallo al traer snapshot keycloak")
-    void update_FalloSnapshotKeycloak(){
+    @DisplayName("Update lanza AuthIntegrationException al fallar traer snapshot de Keycloak")
+    void update_FalloSnapshotKeycloak() {
         UpdatePacienteDto updatePacienteDto = mock(UpdatePacienteDto.class);
+        String authIdStr = authId.toString();
 
         when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
+        doThrow(new RuntimeException("Keycloak caído"))
+                .when(keycloakService).getUserUpdateData(authIdStr);
 
-        doThrow(new RuntimeException( "Error al obtener el estado previo antes de actulizar con el usuario: "+ paciente.getIdAuthentication().toString()))
-                .when(keycloakService).getUserUpdateData(paciente.getIdAuthentication().toString());
+        assertThatThrownBy(() -> pacienteService.update(pacienteId, updatePacienteDto))
+                .isInstanceOf(AuthIntegrationException.class)
+                .hasMessage("Error al obtener el estado previo antes de actulizar con el usuario: " + authIdStr);
 
-        assertThatThrownBy(() -> pacienteService.update(paciente.getIdPaciente(),  updatePacienteDto))
-            .isInstanceOf(RuntimeException.class)
-                .hasMessage("Error al obtener el estado previo antes de actulizar con el usuario: " + paciente.getIdAuthentication().toString());
-
-        verify(keycloakService).getUserUpdateData(paciente.getIdAuthentication().toString());
-        verify(pacienteMapperService, never()).updatePaciente(updatePacienteDto,paciente);
-        verify(keycloakService, never()).updateUserNoRoles(paciente.getIdAuthentication().toString(),  updatePacienteDto.userUpdate());
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService, never()).updateUserNoRoles(anyString(), any());
+        verify(pacienteMapperService, never()).updatePaciente(any(), any());
         verify(pacienteRepository, never()).flush();
     }
 
     @Test
-    @DisplayName("Update fallo al actualizar en keycloak")
-    void update_FalloActualizarKeycloak(){
+    @DisplayName("Update lanza AuthIntegrationException al fallar la actualización en Keycloak")
+    void update_FalloActualizarKeycloak() {
         UpdatePacienteDto updatePacienteDto = mock(UpdatePacienteDto.class);
         UpdateUserWithNoRolesDto snapShotUser = mock(UpdateUserWithNoRolesDto.class);
+        String authIdStr = authId.toString();
 
-        String authId = paciente.getIdAuthentication().toString();
         when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
-        when(keycloakService.getUserUpdateData(paciente.getIdAuthentication().toString())).thenReturn(snapShotUser);
-        doThrow(new RuntimeException("Error al actualizar el Paciente con id_autorization: " + paciente.getIdAuthentication().toString()))
-                .when(keycloakService).updateUserNoRoles(eq(authId), any());
+        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShotUser);
+        doThrow(new RuntimeException("Fallo en Keycloak"))
+                .when(keycloakService).updateUserNoRoles(eq(authIdStr), any());
 
-        assertThatThrownBy(() -> pacienteService.update(pacienteId,  updatePacienteDto))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Error al actualizar el Paciente con id_autorization: " + paciente.getIdAuthentication().toString());
+        assertThatThrownBy(() -> pacienteService.update(pacienteId, updatePacienteDto))
+                .isInstanceOf(AuthIntegrationException.class)
+                .hasMessage("Error al actualizar el Paciente con id_autorization: " + authIdStr);
 
-        verify(keycloakService).getUserUpdateData(paciente.getIdAuthentication().toString());
-        verify(pacienteMapperService, never()).updatePaciente(any(),any());
-        verify(keycloakService).updateUserNoRoles(eq(authId), any());
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(eq(authIdStr), any());
+        verify(pacienteMapperService, never()).updatePaciente(any(), any());
         verify(pacienteRepository, never()).flush();
     }
 
     @Test
-    @DisplayName("Update fallo en BD, ejecuta compensación (rollback) del snapshot en Keycloak")
+    @DisplayName("Update fallo en BD ejecuta compensación del snapshot y lanza PersistenceCompensatedException")
     void update_FalloEnDB_EjecutaCompensacionSnapshot() {
-        // 1. Arrange
         UpdatePacienteDto updatePacienteDto = mock(UpdatePacienteDto.class);
         UpdateUserWithNoRolesDto nuevosDatosUser = mock(UpdateUserWithNoRolesDto.class);
         UpdateUserWithNoRolesDto snapShotUser = mock(UpdateUserWithNoRolesDto.class);
-        String authIdStr = paciente.getIdAuthentication().toString();
+        String authIdStr = authId.toString();
 
-        // Entrenamos el DTO para que devuelva la instancia específica de nuevosDatosUser
+        when(updatePacienteDto.userUpdate()).thenReturn(nuevosDatosUser);
+        when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
+        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShotUser);
+        doThrow(new RuntimeException("Error constraints Postgres")).when(pacienteRepository).flush();
+
+        assertThatThrownBy(() -> pacienteService.update(pacienteId, updatePacienteDto))
+                .isInstanceOf(PersistenceCompensatedException.class)
+                .hasMessage("Ha ocurrido un error al actulizar la data del paciente");
+
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(authIdStr, nuevosDatosUser);
+        verify(pacienteMapperService).updatePaciente(updatePacienteDto, paciente);
+        verify(pacienteRepository).flush();
+        verify(keycloakService).updateUserNoRoles(authIdStr, snapShotUser);
+        verify(pacienteMapperService, never()).entityToDTO(any());
+    }
+
+    @Test
+    @DisplayName("Update lanza CriticalRollbackException si falla la BD y también falla el rollback en Keycloak")
+    void update_FalloEnDB_FalloCompensacionSnapshot() {
+        UpdatePacienteDto updatePacienteDto = mock(UpdatePacienteDto.class);
+        UpdateUserWithNoRolesDto nuevosDatosUser = mock(UpdateUserWithNoRolesDto.class);
+        UpdateUserWithNoRolesDto snapShotUser = mock(UpdateUserWithNoRolesDto.class);
+        String authIdStr = authId.toString();
+
         when(updatePacienteDto.userUpdate()).thenReturn(nuevosDatosUser);
         when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
         when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShotUser);
 
-        // Simulamos que la BD falla al hacer el flush
-        doThrow(new RuntimeException("Error constraints Postgres")).when(pacienteRepository).flush();
-
-        // 2. Act & Assert
-        assertThatThrownBy(() -> pacienteService.update(pacienteId, updatePacienteDto))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Ha ocurrido un error al actulizar la data del paciente");
-
-        // 3. Verify: Ahora cada llamada se verifica con su objeto exacto (1 vez cada una)
-        verify(keycloakService).updateUserNoRoles(authIdStr, nuevosDatosUser); // Intento inicial
-        verify(keycloakService).updateUserNoRoles(authIdStr, snapShotUser);    // Rollback (compensación)
-    }
-
-    @Test
-    @DisplayName("Update fallo en BD y también falla la compensación (rollback) en Keycloak")
-    void update_FalloEnDB_FalloCompensacionSnapshot(){
-        UpdatePacienteDto updatePacienteDto = mock(UpdatePacienteDto.class);
-        UpdateUserWithNoRolesDto snapShotUser = mock(UpdateUserWithNoRolesDto.class);
-        String authIdStr = paciente.getIdAuthentication().toString();
-
-        when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
-        when(keycloakService.getUserUpdateData(authIdStr)).thenReturn(snapShotUser);
-
-        // 1. Falla la BD
+        doNothing()
+                .doThrow(new RuntimeException("Keycloak Caído"))
+                .when(keycloakService).updateUserNoRoles(eq(authIdStr), any());
         doThrow(new RuntimeException("Error constraints")).when(pacienteRepository).flush();
-        // 2. Falla también el rollback en Keycloak
-        doThrow(new RuntimeException("Keycloak Caído")).when(keycloakService).updateUserNoRoles(authIdStr, snapShotUser);
 
         assertThatThrownBy(() -> pacienteService.update(pacienteId, updatePacienteDto))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Error al actualizar el Paciente con id_autorization: " + paciente.getIdAuthentication());
+                .isInstanceOf(CriticalRollbackException.class)
+                .hasMessage("Ha habido un error al hacer rollback del Paciente");
+
+        verify(keycloakService).getUserUpdateData(authIdStr);
+        verify(keycloakService).updateUserNoRoles(authIdStr, nuevosDatosUser);
+        verify(keycloakService).updateUserNoRoles(authIdStr, snapShotUser);
+        verify(pacienteMapperService, never()).entityToDTO(any());
     }
 
-    // Tests para Consultas (Read Only)
+    // =========================================================================
+    // TESTS PARA DESACTIVAR Y REACTIVAR PACIENTE
+    // =========================================================================
 
     @Test
-    @DisplayName("Debe buscar un paciente por ID y fallar si no existe (EntityNotFoundException)")
-    void buscarCualquierMetodo_PacienteNoExiste_LanzaException() {
-        when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.empty());
+    @DisplayName("Debe desactivar el paciente exitosamente en Keycloak y BD")
+    void desactivarPaciente_Exitoso() {
+        when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
+
+        pacienteService.desactivarPaciente(pacienteId);
+
+        assertThat(paciente.isActivo()).isFalse();
+        verify(pacienteRepository).findById(pacienteId);
+        verify(keycloakService).changeEnabledState(authId.toString(), false);
+    }
+
+    @Test
+    @DisplayName("Debe lanzar AuthIntegrationException al desactivar si Keycloak falla")
+    void desactivarPaciente_FalloKeycloak() {
+        when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
+        doThrow(new RuntimeException("Timeout")).when(keycloakService).changeEnabledState(authId.toString(), false);
 
         assertThatThrownBy(() -> pacienteService.desactivarPaciente(pacienteId))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Paciente no encontrado con el id: " + pacienteId);
+                .isInstanceOf(AuthIntegrationException.class)
+                .hasMessage("Error al eliminar el Paciente");
+
+        assertThat(paciente.isActivo()).isTrue();
+        verify(keycloakService).changeEnabledState(authId.toString(), false);
     }
 
     @Test
-    @DisplayName("getByIdPaciente retorna la proyección")
+    @DisplayName("Debe reactivar el paciente exitosamente en Keycloak y BD")
+    void reactivarPaciente_Exitoso() {
+        paciente.setActivo(false);
+        when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
+
+        pacienteService.reactivarPaciente(pacienteId);
+
+        assertThat(paciente.isActivo()).isTrue();
+        verify(pacienteRepository).findById(pacienteId);
+        verify(keycloakService).changeEnabledState(authId.toString(), true);
+    }
+
+    @Test
+    @DisplayName("Debe lanzar AuthIntegrationException al reactivar si Keycloak falla")
+    void reactivarPaciente_FalloKeycloak() {
+        paciente.setActivo(false);
+        when(pacienteRepository.findById(pacienteId)).thenReturn(Optional.of(paciente));
+        doThrow(new RuntimeException("Timeout")).when(keycloakService).changeEnabledState(authId.toString(), true);
+
+        assertThatThrownBy(() -> pacienteService.reactivarPaciente(pacienteId))
+                .isInstanceOf(AuthIntegrationException.class)
+                .hasMessage("Error al reactivar el Paciente");
+
+        assertThat(paciente.isActivo()).isFalse();
+        verify(keycloakService).changeEnabledState(authId.toString(), true);
+    }
+
+    // =========================================================================
+    // TESTS PARA CONSULTAS (READ-ONLY)
+    // =========================================================================
+
+    @Test
+    @DisplayName("findAllActivo debe retornar página de proyecciones")
+    void findAllActivo_Exitoso() {
+        Pageable pageable = mock(Pageable.class);
+        @SuppressWarnings("unchecked")
+        Page<DetallesPacienteProjection> pageMock = mock(Page.class);
+        when(pacienteRepository.findAllByActivoTrue(pageable)).thenReturn(pageMock);
+
+        Page<DetallesPacienteProjection> resultado = pacienteService.findAllActivo(pageable);
+
+        assertThat(resultado).isEqualTo(pageMock);
+        verify(pacienteRepository).findAllByActivoTrue(pageable);
+        verifyNoInteractions(keycloakService, pacienteMapperService);
+    }
+
+    @Test
+    @DisplayName("getByIdPaciente retorna la proyección cuando existe")
     void getByIdPaciente_Exitoso() {
         DetallesPacienteProjection projection = mock(DetallesPacienteProjection.class);
         when(pacienteRepository.findByIdPacienteAndActivoTrue(pacienteId)).thenReturn(Optional.of(projection));
@@ -265,10 +351,12 @@ public class PacienteServiceImplTest {
         DetallesPacienteProjection resultado = pacienteService.getByIdPaciente(pacienteId);
 
         assertThat(resultado).isEqualTo(projection);
+        verify(pacienteRepository).findByIdPacienteAndActivoTrue(pacienteId);
+        verifyNoInteractions(keycloakService);
     }
 
     @Test
-    @DisplayName("findByEmail retorna la proyección")
+    @DisplayName("findByEmail retorna la proyección cuando existe")
     void findByEmail_Exitoso() {
         String email = "test@test.com";
         DetallesPacienteProjection projection = mock(DetallesPacienteProjection.class);
@@ -277,10 +365,38 @@ public class PacienteServiceImplTest {
         DetallesPacienteProjection resultado = pacienteService.findByEmail(email);
 
         assertThat(resultado).isEqualTo(projection);
+        verify(pacienteRepository).findByActivoTrueAndEmail(email);
+        verifyNoInteractions(keycloakService);
     }
 
     @Test
-    @DisplayName("findByCedula lanza excepción si no existe")
+    @DisplayName("findAllByTelefono retorna lista de proyecciones cuando existe")
+    void findAllByTelefono_Exitoso() {
+        String telefono = "8095550000";
+        DetallesPacienteProjection projection = mock(DetallesPacienteProjection.class);
+        when(pacienteRepository.findAllByActivoTrueAndTelefono(telefono)).thenReturn(Optional.of(List.of(projection)));
+
+        List<DetallesPacienteProjection> resultado = pacienteService.findAllByTelefono(telefono);
+
+        assertThat(resultado).hasSize(1).containsExactly(projection);
+        verify(pacienteRepository).findAllByActivoTrueAndTelefono(telefono);
+        verifyNoInteractions(keycloakService);
+    }
+
+    @Test
+    @DisplayName("findByIdAuthentication retorna entidad cuando existe")
+    void findByIdAuthentication_Exitoso() {
+        when(pacienteRepository.findByIdAuthentication(authId)).thenReturn(Optional.of(paciente));
+
+        Paciente resultado = pacienteService.findByIdAuthentication(authId);
+
+        assertThat(resultado).isEqualTo(paciente);
+        verify(pacienteRepository).findByIdAuthentication(authId);
+        verifyNoInteractions(keycloakService);
+    }
+
+    @Test
+    @DisplayName("findByCedula lanza EntityNotFoundException si no existe")
     void findByCedula_NoExiste_LanzaException() {
         String cedula = "40200000001";
         when(pacienteRepository.findByCedulaAndActivoTrue(cedula)).thenReturn(Optional.empty());
@@ -288,9 +404,8 @@ public class PacienteServiceImplTest {
         assertThatThrownBy(() -> pacienteService.findByCedula(cedula))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Ningun paciente encntrado con la cedula: " + cedula);
+
+        verify(pacienteRepository).findByCedulaAndActivoTrue(cedula);
+        verifyNoInteractions(keycloakService);
     }
-
-
 }
-
-
