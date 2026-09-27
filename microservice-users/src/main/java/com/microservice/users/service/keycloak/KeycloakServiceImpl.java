@@ -242,9 +242,9 @@ public class KeycloakServiceImpl implements IkeycloakService {
             // Se construye el snapshot con el estado actual del usuario
             return new UpdateUserWithNoRolesDto(
                     user.getUsername(),
+                    user.getEmail(),
                     user.getFirstName(),
-                    user.getLastName(),
-                    user.getEmail()
+                    user.getLastName()
             );
 
         } catch (Exception e) {
