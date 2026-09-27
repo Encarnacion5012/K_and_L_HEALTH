@@ -164,6 +164,12 @@ public class DoctorServiceImpl implements IDoctorService {
         }
 
         try {
+            keycloakService.updateUserNoRoles(doctor.getIdAuthentication().toString(), updateDTO.userUpdate());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al actualizar el Doctor en keycloak con id_auth: " + doctor.getIdAuthentication());
+        }
+
+        try {
 
             doctorMapperService.update(updateDTO, doctor);
 
@@ -174,7 +180,7 @@ public class DoctorServiceImpl implements IDoctorService {
                 }
 
                 doctor.getEspecialidades().clear();
-                doctor.helperRelacionEspecialidad(nuevasEspecialidades);
+                doctor.getEspecialidades().addAll(nuevasEspecialidades);
             }
 
             doctorRepository.flush();
