@@ -1,0 +1,1 @@
+create unique index if not exists especilidades_nombre_especialidad on especialidades (nombre_especialidad);

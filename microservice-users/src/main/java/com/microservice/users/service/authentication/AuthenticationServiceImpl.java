@@ -5,6 +5,7 @@ import com.microservice.users.repository.PacienteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,7 +16,7 @@ public class AuthenticationServiceImpl  implements  IAuthenticationService {
     private final PacienteRepository pacienteRepository;
 
     @Override
-    public LoginResponsePaciente loginResponsePaciente(OidcUser oidcUser) {
+    public LoginResponsePaciente loginResponsePaciente(Jwt jwt) {
         
 
         return null;
