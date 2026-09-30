@@ -22,6 +22,7 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
     Optional<DetallesPacienteProjection> findByActivoTrueAndEmail(String email);
     Optional<List<DetallesPacienteProjection>> findAllByActivoTrueAndTelefono(String telefono);
 
+    boolean existsByIdPaciente(UUID idPaciente);
 
 }
 

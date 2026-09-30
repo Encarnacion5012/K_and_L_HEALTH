@@ -201,4 +201,9 @@ public class DoctorServiceImpl implements IDoctorService {
 
 
     }
+
+    @Override
+    public boolean existsByIdDoctor(UUID idDoctor) {
+        return doctorRepository.existsByIdDoctor(idDoctor);
+    }
 }

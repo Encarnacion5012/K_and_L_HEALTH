@@ -31,5 +31,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
     @EntityGraph(attributePaths = {"horarioAtencion", "especialidades"})
     Optional<DetallesDoctorProjection> findByIdAuthentication(UUID idAuthentication);
 
+    boolean existsByIdDoctor(UUID idDoctor);
+
 
 }

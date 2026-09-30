@@ -87,4 +87,10 @@ public class PacienteController {
         return ResponseEntity.ok(paciente);
     }
 
+    @GetMapping("/exists_by_id/{idPaciente}")
+    public ResponseEntity<Boolean> existsByIdPaciente(@PathVariable UUID idPaciente) {
+        boolean  exists = pacienteService.existsByIdPaciente(idPaciente);
+        return ResponseEntity.ok(exists);
+    }
+
 }

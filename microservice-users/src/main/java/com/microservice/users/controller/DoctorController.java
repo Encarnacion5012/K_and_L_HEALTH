@@ -88,4 +88,10 @@ public class DoctorController {
         DetalleDoctorDto doctorActualizado =  doctorService.updateDoctor(id_doctor, updateDTO);
         return ResponseEntity.ok(doctorActualizado);
     }
+
+    @GetMapping("/exists_by_id/{idDoctor}")
+    public ResponseEntity<Boolean> existsByIdPaciente(@PathVariable UUID idDoctor) {
+        boolean  exists = doctorService.existsByIdDoctor(idDoctor);
+        return ResponseEntity.ok(exists);
+    }
 }

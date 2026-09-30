@@ -20,5 +20,6 @@ public interface IDoctorService {
     DetallesDoctorProjection findBYIdAuthentication(UUID idAuthentication);
     DetallesDoctorProjection findByCedula(String cedula);
     DetalleDoctorDto updateDoctor(UUID idDoctor, UpdateDoctorDto updateDTO);
+    boolean existsByIdDoctor(UUID idDoctor);
 
 }

@@ -24,6 +24,7 @@ DetallesPacienteProjection findByEmail(String email);
 List<DetallesPacienteProjection> findAllByTelefono(String telefono);
 Paciente findByIdAuthentication(UUID id_authentication);
 DetallesPacienteProjection findByCedula(String cedula);
+boolean existsByIdPaciente(UUID idPaciente);
 
 
 }

@@ -164,4 +164,9 @@ public class PacienteServiceImpl implements IPacienteService {
         return pacienteRepository.findByCedulaAndActivoTrue(cedula)
                 .orElseThrow(()-> new EntityNotFoundException("Ningun paciente encntrado con la cedula: " + cedula));
     }
+
+    @Override
+    public boolean existsByIdPaciente(UUID idPaciente) {
+        return pacienteRepository.existsByIdPaciente(idPaciente);
+    }
 }
