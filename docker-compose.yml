@@ -20,8 +20,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: mcsv_citasdb
-      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Estudent1!
+      POSTGRES_USER: postgres
     ports:
       - "5432:5432"
     expose:
