@@ -7,6 +7,10 @@ import com.microservice.citas.dto.DetalleCitaDto;
 import com.microservice.citas.http.response.doctor.DetalleDoctorDto;
 import com.microservice.citas.http.response.doctor.DetalleHorarioAtencionDto;
 import com.microservice.citas.http.response.paciente.DetallePacienteDto;
+import com.microservice.citas.mapper.CitaMapperService;
+import com.microservice.citas.model.Cita;
+import com.microservice.citas.repository.CitaRepository;
+import com.microservice.citas.service.validaciones.ValidarCreacionCita;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,13 +18,17 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CitaServiceImp implements ICitaService{
     private final  DoctorClient doctorClient;
     private final PacienteClient pacienteClient;
-
+    private final CitaRepository citaRepository;
+    private final List<ValidarCreacionCita> validaciones;
+    private final CitaMapperService citaMapperService;
 
     @Transactional
     @Override
@@ -30,25 +38,19 @@ public class CitaServiceImp implements ICitaService{
             DetalleDoctorDto doctor = doctorClient.findById(createCitaDto.idDoctor());
             DetallePacienteDto pacienteDto = pacienteClient.findByIdPaciente(createCitaDto.idPaciente());
 
-            DayOfWeek diaCIta = createCitaDto.fechaHoaraCita().getDayOfWeek();
-            LocalTime horaCIta = createCitaDto.fechaHoaraCita().toLocalTime();
-            DetalleHorarioAtencionDto horarioDia = doctor.horarioAtencion().stream()
-                    .filter(h-> h.diaDeSemana().equals(diaCIta))
-                    .findFirst()
-                    .orElseThrow(()-> new IllegalArgumentException("EL doctor no trabaja los dias: " + diaCIta));
+            validaciones.forEach(v-> v.validarCreacionCita(createCitaDto, doctor));
 
-            boolean horaValida = !horaCIta.isBefore(horarioDia.horaInicio()) &&  !horaCIta.isAfter(horarioDia.horaFin());
+            Cita cita = citaMapperService.createDtoToEntity(createCitaDto);
 
-            if(!horaValida) {
-                throw new RuntimeException("La hora a la cual esta agendando la cita no es valida, por favor ingrese una hora valida");
-            }
+            citaRepository.save(cita);
 
+            return citaMapperService.entitysToDetalleDto(doctor, pacienteDto, cita);
 
 
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
         }
 
-        return null;
+
     }
 }

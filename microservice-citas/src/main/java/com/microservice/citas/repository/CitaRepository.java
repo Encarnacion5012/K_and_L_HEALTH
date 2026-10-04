@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public interface CitaRepository extends CrudRepository<Cita, UUID> {
 
-    boolean existsByIdDoctorAndFechaHoaraCitaAndEstado(UUID idDoctor, LocalDateTime fechaHoaraCita, Estado_Cita estado, String estadoCita);
-    boolean existsByIdPacienteAfterAndFechaHoaraCitaAndEstado(UUID idDoctor, LocalDateTime fechaHoaraCita, Estado_Cita estado, String estadoCita);
+    boolean existsByIdDoctorAndFechaHoaraCitaAndEstado(UUID idDoctor, LocalDateTime fechaHoaraCita, Estado_Cita estado);
+    boolean existsByIdPacienteAfterAndFechaHoaraCitaAndEstado(UUID idDoctor, LocalDateTime fechaHoaraCita, Estado_Cita estado);
 }
