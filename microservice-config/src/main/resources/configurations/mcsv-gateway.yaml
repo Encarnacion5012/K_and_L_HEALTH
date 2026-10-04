@@ -50,14 +50,32 @@ spring:
               filters:
                 - SaveSession
                 - TokenRelay
+            #Rutas de citas
+            - id: cita-routes
+              uri: lb://mcsv-citas
+              predicates:
+                - Path=/api/citas/**
+              filters:
+                - SaveSession
+                - TokenRelay
 
             #RUtas de swagger para documentacion
+            #Users
             - id: users-service-docs
               uri: lb://mcsv-users
               predicates:
                 - Path=/users-service/v3/api-docs
               filters:
                 - SetPath=/v3/api-docs
+
+            #Citas
+            - id: cita-service-docs
+              uri: lb://mcsv-citas
+              predicates:
+                  - Path=/mcsv-users/v3/api-docs
+              filters:
+                - SetPath=/v3/api-docs
+
 
   security:
     oauth2:
