@@ -6,6 +6,7 @@ import com.microservice.users.exception.custom.PersistenceCompensatedException;
 import com.microservice.users.exception.custom.UserConflictException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -96,9 +97,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
-    // 6. Errores de validación de DTOs con @Valid (400 BAD_REQUEST)
+    // 6. Errores de validación de DTOs con @Valid en @RequestBody (400 BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDto> handleValidationErrors(
+    public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         Map<String, String> fieldErrors = new HashMap<>();
@@ -109,23 +110,31 @@ public class GlobalExceptionHandler {
         ErrorResponseDto error = new ErrorResponseDto(
                 HttpStatus.BAD_REQUEST.value(),
                 "Error de validación en los campos enviados",
-                "Verifique los datos de entrada",
+                "Uno o más campos no cumplen con el formato o restricciones requeridas",
                 request.getRequestURI(),
                 fieldErrors
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // 7. Validación en @PathVariable como @Email en PacienteController (400 BAD_REQUEST)
+    // 7. Validación en @PathVariable o @RequestParam (400 BAD_REQUEST)
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponseDto> handleConstraintViolation(
             ConstraintViolationException ex, HttpServletRequest request) {
 
+        Map<String, String> errors = new HashMap<>();
+        for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+            String propertyPath = violation.getPropertyPath().toString();
+            String field = propertyPath.substring(propertyPath.lastIndexOf('.') + 1);
+            errors.put(field, violation.getMessage());
+        }
+
         ErrorResponseDto error = new ErrorResponseDto(
                 HttpStatus.BAD_REQUEST.value(),
                 "Parámetro de consulta inválido",
-                ex.getMessage(),
-                request.getRequestURI()
+                "Verifique los parámetros enviados en la URL",
+                request.getRequestURI(),
+                errors
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
@@ -157,26 +166,5 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
-
-        Map<String, String> errors = new HashMap<>();
-
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            errors.put(fieldError.getField(), fieldError.getDefaultMessage());
-        }
-
-        ErrorResponseDto errorResponse = new ErrorResponseDto(
-                HttpStatus.BAD_REQUEST.value(),
-                "Error de validación en los campos enviados",
-                "Uno o más campos no cumplen con el formato o restricciones requeridas",
-                request.getRequestURI(),
-                errors
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 }
