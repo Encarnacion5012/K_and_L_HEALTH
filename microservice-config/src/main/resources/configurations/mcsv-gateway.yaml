@@ -1,6 +1,7 @@
 server:
   port: 8080
 
+
 spring:
   application:
     name: mcsv-gateway
@@ -59,23 +60,22 @@ spring:
                 - SaveSession
                 - TokenRelay
 
-            #RUtas de swagger para documentacion
-            #Users
-            - id: users-service-docs
+            # Rutas de swagger para documentación
+          # Users
+            - id: openapi-users
               uri: lb://mcsv-users
               predicates:
-                - Path=/users-service/v3/api-docs
+               - Path=/v3/api-docs/mcsv-users
               filters:
-                - SetPath=/v3/api-docs
+               - RewritePath=/v3/api-docs/mcsv-users, /v3/api-docs
 
-            #Citas
-            - id: cita-service-docs
+          # Citas
+            - id: openapi-citas
               uri: lb://mcsv-citas
               predicates:
-                  - Path=/mcsv-users/v3/api-docs
+                - Path=/v3/api-docs/mcsv-citas
               filters:
-                - SetPath=/v3/api-docs
-
+                - RewritePath=/v3/api-docs/mcsv-citas, /v3/api-docs
 
   security:
     oauth2:
@@ -103,12 +103,17 @@ eureka:
       defaultZone: http://eureka:password@localhost:8761/eureka/
 
 springdoc:
+  api-docs:
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
     with-credentials: true
+    disable-swagger-default-url: true
     urls:
       - name: Microservicio Usuarios
-        url: /users-service/v3/api-docs
+        url: /v3/api-docs/mcsv-users
+      - name: Microservicio Citas
+        url: /v3/api-docs/mcsv-citas
 
 management:
   endpoints:

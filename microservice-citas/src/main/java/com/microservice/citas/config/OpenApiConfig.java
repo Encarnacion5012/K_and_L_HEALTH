@@ -17,9 +17,9 @@ public class OpenApiConfig {
             return new OpenAPI()
                     .servers(List.of(new Server().url("http://localhost:8080").description(" API GATEWAY")))
                     .info(new Info()
-                    .title("OPEN API MCSV USERS")
+                    .title("OPEN API MCSV CITAS")
                     .version("0.0.1")
-                    .description("Open API MCSV USERS")
+                    .description("Open API MCSV CITAS")
                     .termsOfService("http://swagger.io/terms/")
                     .license(new License().name("Apache 2.0").url("http://springdoc.org"))
 
