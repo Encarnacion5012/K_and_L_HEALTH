@@ -57,11 +57,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handlePersistenceCompensated(
             PersistenceCompensatedException ex, HttpServletRequest request) {
 
-        log.warn("Operación abortada en BD pero compensada con éxito en Keycloak: {}", ex.getMessage());
+        // Registra la traza técnica completa solo en los logs internos
+        log.error("Fallo de persistencia compensado en {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+
         ErrorResponseDto error = new ErrorResponseDto(
                 HttpStatus.CONFLICT.value(),
-                "Error al procesar datos en base de datos (Operación revertida)",
-                ex.getMessage(),
+                "Error al procesar la solicitud",
+                ex.getMessage(), // Ahora contiene el texto limpio que definiste arriba
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
@@ -158,11 +160,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleGenericException(
             Exception ex, HttpServletRequest request) {
 
-        log.error("Error inesperado en {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        // Todo el detalle técnico va a los logs
+        log.error("Error no controlado en {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+
+        // Al cliente solo un mensaje seguro y genérico
         ErrorResponseDto error = new ErrorResponseDto(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Error interno del servidor",
-                ex.getMessage(),
+                "Ocurrió un error inesperado al procesar la solicitud. Por favor, intente más tarde o contacte al administrador.",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);

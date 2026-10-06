@@ -57,7 +57,7 @@ public class DoctorServiceImpl implements IDoctorService {
         try{
             newDoctor.setIdAuthentication(UUID.fromString(newIdAuthenticationDoctor));
 
-            doctorRepository.save(newDoctor);
+            doctorRepository.saveAndFlush(newDoctor);
 
             Set<Especialidad> especialidades = new HashSet<>(especialidadRepository.findAllById(createDTO.idEspecialidades()));
 
@@ -70,7 +70,7 @@ public class DoctorServiceImpl implements IDoctorService {
 
             newDoctor.helperRelacionEspecialidad(especialidades);
 
-            horarioAtencionRepository.saveAll(horarioAtencion);
+            horarioAtencionRepository.saveAllAndFlush(horarioAtencion);
         } catch (Exception e) {
             try{
                 keycloakService.deleteUser(newIdAuthenticationDoctor);
@@ -78,7 +78,7 @@ public class DoctorServiceImpl implements IDoctorService {
                 throw new CriticalRollbackException("Error al eliminar el doctor con id_autorization: " + newIdAuthenticationDoctor, ex);
             }
 
-            throw new PersistenceCompensatedException("Hubo un problema al crear el nuevo doctor: " + e.getMessage());
+            throw new PersistenceCompensatedException("Hubo un problema al crear el nuevo doctor, se ha hecho el rolback correctamente",e);
         }
 
         return doctorMapperService.entityToDto(newDoctor);
@@ -120,7 +120,7 @@ public class DoctorServiceImpl implements IDoctorService {
         try {
             keycloakService.changeEnabledState(doctor.getIdAuthentication().toString(), true);
         }catch (Exception e){
-            throw new AuthIntegrationException("Error activating user doctor " + e.getMessage(), e);
+            throw new AuthIntegrationException("Error activating user doctor", e);
         }
         doctor.reactivarDoctor();
     }
@@ -192,10 +192,10 @@ public class DoctorServiceImpl implements IDoctorService {
             try {
                 keycloakService.updateUserNoRoles(doctor.getIdAuthentication().toString(), snapShot);
             }catch (Exception ex){
-                throw new CriticalRollbackException("Error critico hacer rolback en keycloak al usuario con id: " + doctor.getIdAuthentication().toString());
+                throw new CriticalRollbackException("Error critico hacer rolback en keycloak al usuario con id: " + doctor.getIdAuthentication().toString(), ex);
             }
 
-            throw new PersistenceCompensatedException("Ha ocurrido un errror durante la actulizacion de usuario del usuarios :" + idDoctor.toString() + "el rolback ha sido exitoso");
+            throw new PersistenceCompensatedException("Ha ocurrido un errror durante la actulizacion de usuario del usuarios :" + idDoctor.toString() + "el rolback ha sido exitoso", e);
         }
         return  doctorMapperService.entityToDto(doctor);
 
