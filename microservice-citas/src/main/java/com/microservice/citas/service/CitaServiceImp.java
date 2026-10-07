@@ -11,9 +11,15 @@ import com.microservice.citas.repository.CitaRepository;
 import com.microservice.citas.service.validaciones.ValidarCreacionCita;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +36,7 @@ public class CitaServiceImp implements ICitaService{
         try {
 
             DetallePacienteDto pacienteDto = userClient.findByIdPaciente(createCitaDto.idPaciente());
-            DetalleDoctorDto doctor = userClient.findById(createCitaDto.idDoctor());
+            DetalleDoctorDto doctor = userClient.findDoctorById(createCitaDto.idDoctor());
 
             validaciones.forEach(v-> v.validarCreacionCita(createCitaDto, doctor));
 
@@ -47,4 +53,36 @@ public class CitaServiceImp implements ICitaService{
 
 
     }
+
+    @Override
+    public Page<DetalleCitaDto> findAllAgendadaAndReagendada(Pageable pageable) {
+        Page<Cita> citas = citaRepository.findAllAgendadaAndReagendada(pageable);
+
+        Set<UUID> id_Pacientes = citas
+                .map(Cita::getIdPaciente)
+                .toSet();
+
+        Set<UUID>id_Doctors = citas
+                .map(Cita::getIdDoctor)
+                .toSet();
+        Map<UUID, DetallePacienteDto> pacienteDtoMap = id_Pacientes.stream()
+                .collect(Collectors.toMap(id-> id, userClient::findByIdPaciente));
+
+        Map<UUID, DetalleDoctorDto> doctorDtoMap = id_Doctors.stream()
+                .collect(Collectors.toMap(id-> id, userClient::findDoctorById));
+
+        return citas
+                .map(c-> citaMapperService.entitysToDetalleDto(
+                        doctorDtoMap.get(c.getIdDoctor()),
+                        pacienteDtoMap.get(c.getIdPaciente()),
+                        c
+                )) ;
+    }
+
+
+    private DetalleCitaDto helperParaArmarDto(Cita cita, DetallePacienteDto pacienteDto, DetalleDoctorDto doctorDto) {
+        return citaMapperService.entitysToDetalleDto(doctorDto, pacienteDto, cita);
+    }
+
+
 }

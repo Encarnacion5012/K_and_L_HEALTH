@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface UserClient {
 
     @GetMapping("/doctor/find_by_id/{id_Doctor}")
-    DetalleDoctorDto findById(@PathVariable UUID id_Doctor);
+    DetalleDoctorDto findDoctorById(@PathVariable UUID id_Doctor);
 
     @GetMapping("/pacientes/find_by_id/{id_paciente}")
     DetallePacienteDto findByIdPaciente(@PathVariable UUID id_paciente);
