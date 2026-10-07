@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
-@FeignClient(name = "mcsv-users", path = "/api/doctor")
+@FeignClient(name = "mcsv-users", path = "/api")
 public interface UserClient {
 
-    @GetMapping("/find_by_id/{id_Doctor}")
+    @GetMapping("/doctor/find_by_id/{id_Doctor}")
     DetalleDoctorDto findById(@PathVariable UUID id_Doctor);
 
-    @GetMapping("/find_by_id/{id_paciente}")
+    @GetMapping("/pacientes/find_by_id/{id_paciente}")
     DetallePacienteDto findByIdPaciente(@PathVariable UUID id_paciente);
 }

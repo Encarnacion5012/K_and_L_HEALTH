@@ -28,8 +28,9 @@ public class CitaServiceImp implements ICitaService{
     public DetalleCitaDto create(CreateCitaDto createCitaDto) {
 
         try {
-            DetalleDoctorDto doctor = userClient.findById(createCitaDto.idDoctor());
+
             DetallePacienteDto pacienteDto = userClient.findByIdPaciente(createCitaDto.idPaciente());
+            DetalleDoctorDto doctor = userClient.findById(createCitaDto.idDoctor());
 
             validaciones.forEach(v-> v.validarCreacionCita(createCitaDto, doctor));
 
