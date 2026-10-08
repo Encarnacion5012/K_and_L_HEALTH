@@ -41,4 +41,10 @@ public class Cita {
     @Enumerated(EnumType.STRING)
     private Estado_Cita estado;
 
+    private boolean reagendada;
+
+    public void cancelarCita() {
+        this.estado = Estado_Cita.CANCELADA;
+    }
+
 }

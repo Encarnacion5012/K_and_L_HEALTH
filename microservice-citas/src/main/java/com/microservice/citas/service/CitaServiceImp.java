@@ -9,6 +9,7 @@ import com.microservice.citas.mapper.CitaMapperService;
 import com.microservice.citas.model.Cita;
 import com.microservice.citas.repository.CitaRepository;
 import com.microservice.citas.service.validaciones.ValidarCreacionCita;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,7 +43,7 @@ public class CitaServiceImp implements ICitaService{
 
             Cita cita = citaMapperService.createDtoToEntity(createCitaDto);
 
-            citaRepository.save(cita);
+            citaRepository.saveAndFlush(cita);
 
             return citaMapperService.entitysToDetalleDto(doctor, pacienteDto, cita);
 
@@ -79,10 +80,25 @@ public class CitaServiceImp implements ICitaService{
                 )) ;
     }
 
+    @Override
+    public void cancelarCita(UUID id_Cita) {
+        try{
+            Cita cita = findByidHelper(id_Cita);
 
-    private DetalleCitaDto helperParaArmarDto(Cita cita, DetallePacienteDto pacienteDto, DetalleDoctorDto doctorDto) {
-        return citaMapperService.entitysToDetalleDto(doctorDto, pacienteDto, cita);
+            cita.cancelarCita();
+
+            citaRepository.flush();
+
+        }catch (Exception e){
+            throw new RuntimeException("Ha ocurrido un error al desactivar la cita con id: " + id_Cita,e);
+        }
     }
 
 
+
+
+    private Cita findByidHelper(UUID id_Cita){
+        return  citaRepository.findById(id_Cita)
+                .orElseThrow(()-> new EntityNotFoundException("Cita no encontrada con id: " + id_Cita));
+    }
 }

@@ -10,6 +10,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/citas")
@@ -30,6 +31,16 @@ public class CitaController {
         Page<DetalleCitaDto> citas = citaService.findAllAgendadaAndReagendada(pageable);
         return  ResponseEntity.ok().body(citas);
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN','PACIENTE','RECEPCIONISTA')")
+    @PutMapping("/cncelar_cita/{id_Cita}")
+    public ResponseEntity<Void> cancelarCita(@PathVariable UUID id_Cita){
+        citaService.cancelarCita(id_Cita);
+        return ResponseEntity.noContent().build();
+    }
+
+
+
 
 
 }
