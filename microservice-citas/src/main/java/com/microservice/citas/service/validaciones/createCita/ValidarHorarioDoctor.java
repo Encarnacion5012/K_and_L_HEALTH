@@ -1,9 +1,8 @@
-package com.microservice.citas.service.validaciones;
+package com.microservice.citas.service.validaciones.createCita;
 
 import com.microservice.citas.dto.CreateCitaDto;
 import com.microservice.citas.http.response.doctor.DetalleDoctorDto;
 import com.microservice.citas.http.response.doctor.DetalleHorarioAtencionDto;
-import com.microservice.citas.repository.CitaRepository;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;

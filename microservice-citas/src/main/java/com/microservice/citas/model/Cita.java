@@ -33,14 +33,17 @@ public class Cita {
     @Column(name = "id_doctor")
     private UUID idDoctor;
 
-    @Column(name = "fecha_hoara_cita")
-    private LocalDateTime fechaHoaraCita;
+    @Column(name = "fecha_hora_cita")
+    private LocalDateTime fechaHoraCita;
 
+    @Column(name = "motivo")
     private String motivo;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "estado")
     private Estado_Cita estado;
 
+    @Column(name = "reagendada")
     private boolean reagendada;
 
     public void cancelarCita() {

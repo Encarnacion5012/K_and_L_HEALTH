@@ -3,12 +3,15 @@ package com.microservice.citas.service;
 import com.microservice.citas.clients.UserClient;
 import com.microservice.citas.dto.CreateCitaDto;
 import com.microservice.citas.dto.DetalleCitaDto;
+import com.microservice.citas.dto.ReagendarCitaDto;
 import com.microservice.citas.http.response.doctor.DetalleDoctorDto;
 import com.microservice.citas.http.response.paciente.DetallePacienteDto;
 import com.microservice.citas.mapper.CitaMapperService;
 import com.microservice.citas.model.Cita;
+import com.microservice.citas.model.Estado_Cita;
 import com.microservice.citas.repository.CitaRepository;
-import com.microservice.citas.service.validaciones.ValidarCreacionCita;
+import com.microservice.citas.service.validaciones.createCita.ValidarCreacionCita;
+import com.microservice.citas.service.validaciones.reajendar.ValidarReagendaCita;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +30,8 @@ import java.util.stream.Collectors;
 public class CitaServiceImp implements ICitaService{
     private final UserClient userClient;
     private final CitaRepository citaRepository;
-    private final List<ValidarCreacionCita> validaciones;
+    private final List<ValidarCreacionCita> validacionesAGendaCitas;
+    private final List<ValidarReagendaCita> validacionesReagendaCitas;
     private final CitaMapperService citaMapperService;
 
     @Transactional
@@ -39,7 +43,7 @@ public class CitaServiceImp implements ICitaService{
             DetallePacienteDto pacienteDto = userClient.findByIdPaciente(createCitaDto.idPaciente());
             DetalleDoctorDto doctor = userClient.findDoctorById(createCitaDto.idDoctor());
 
-            validaciones.forEach(v-> v.validarCreacionCita(createCitaDto, doctor));
+            validacionesAGendaCitas.forEach(v-> v.validarCreacionCita(createCitaDto, doctor));
 
             Cita cita = citaMapperService.createDtoToEntity(createCitaDto);
 
@@ -94,8 +98,29 @@ public class CitaServiceImp implements ICitaService{
         }
     }
 
+    @Override
+    public void reagendarCita(UUID id_Cita, ReagendarCitaDto reagendarCitaDto) {
+        try {
+            Cita cita = citaRepository.findByIdAndEstadoAgendadaAndReagendada(id_Cita)
+                    .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada con el id: " + id_Cita));
 
+            cita.setEstado(Estado_Cita.REAGENDADA);
 
+            validacionesReagendaCitas.forEach(vr-> vr.validarReagendaCita(
+                    id_Cita,
+                    cita.getIdDoctor(),
+                    reagendarCitaDto.nuevaFechaHora(),
+                    cita.getIdPaciente()
+            ));
+
+            cita.setFechaHoraCita(reagendarCitaDto.nuevaFechaHora());
+
+            citaRepository.flush();
+
+        }catch (Exception e){
+            throw new RuntimeException("Ha ocurrido un error al Reagendar la cita con id: " +  id_Cita,e);
+        }
+    }
 
     private Cita findByidHelper(UUID id_Cita){
         return  citaRepository.findById(id_Cita)
