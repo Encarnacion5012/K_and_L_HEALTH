@@ -16,7 +16,7 @@ public record DetalleCitaDto(
         String nombre_Doctor,
         String apellido_Doctor,
         Set<String> especialidades_Doctor,
-        LocalDateTime fechaHoaraCita,
+        LocalDateTime fechaHoraCita,
         String motivo,
         Estado_Cita estado
 

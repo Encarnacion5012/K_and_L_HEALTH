@@ -23,7 +23,7 @@ public class ValidarDisponibilidad implements ValidarCreacionCita{
                         null,
                         createCitaDto.idDoctor(),
                         fechaInicioConsulta,
-                        createCitaDto.fechaHoaraCita(),
+                        createCitaDto.fechaHoraCita(),
                         createCitaDto.idPaciente()
                 );
 

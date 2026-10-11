@@ -2,6 +2,7 @@ package com.microservice.citas.controller;
 
 import com.microservice.citas.dto.CreateCitaDto;
 import com.microservice.citas.dto.DetalleCitaDto;
+import com.microservice.citas.dto.ReagendarCitaDto;
 import com.microservice.citas.service.ICitaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,14 @@ public class CitaController {
     @PutMapping("/cncelar_cita/{id_Cita}")
     public ResponseEntity<Void> cancelarCita(@PathVariable UUID id_Cita){
         citaService.cancelarCita(id_Cita);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','PACIENTE','RECEPCIONISTA')")
+    @PutMapping("/reagendar_cita/{id_Cita}")
+    public ResponseEntity<Void> reagendarCita(@PathVariable UUID id_Cita, @RequestBody ReagendarCitaDto reagendarCitaDto) {
+        citaService.reagendarCita(id_Cita, reagendarCitaDto);
+
         return ResponseEntity.noContent().build();
     }
 

@@ -17,7 +17,7 @@ public record CreateCitaDto(
 
         @Future(message = "La cita debe agendarse en una fecha futura")
 
-        LocalDateTime fechaHoaraCita,
+        LocalDateTime fechaHoraCita,
 
         @NotBlank(message = "EL motivo de la cita debe estar especificado")
         String motivo

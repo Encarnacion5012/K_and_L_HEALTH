@@ -14,7 +14,7 @@ public class ValidarAntelacionMinima implements ValidarCreacionCita {
         LocalDateTime ahora = LocalDateTime.now();
         LocalDate hoy = LocalDate.now();
 
-        if (createCitaDto.fechaHoaraCita().toLocalDate().isEqual(hoy) && !createCitaDto.fechaHoaraCita().isBefore(ahora.plusHours(1))) {
+        if (createCitaDto.fechaHoraCita().toLocalDate().isEqual(hoy) && !createCitaDto.fechaHoraCita().isBefore(ahora.plusHours(1))) {
             throw new RuntimeException("Las citas deben agendarse con una hora de antelacion");
         }
     }

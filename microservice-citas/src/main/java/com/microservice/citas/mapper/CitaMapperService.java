@@ -18,6 +18,7 @@ public interface CitaMapperService {
     @Mapping(target = "idCita", ignore = true)
     @Mapping(target = "estado", expression = "java(Estado_Cita.AGENDADA)")
     @Mapping(target = "reagendada", constant = "false")
+    @Mapping(target = "fechaHoraCita", source = "createDto.fechaHoraCita")
     Cita createDtoToEntity(CreateCitaDto createDto);
 
     @Mapping(target = "nombre_Paciente", source = "pacienteDto.nombre")

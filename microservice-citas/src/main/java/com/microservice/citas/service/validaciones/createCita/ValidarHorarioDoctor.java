@@ -10,8 +10,8 @@ import java.time.LocalTime;
 public class ValidarHorarioDoctor implements ValidarCreacionCita{
     @Override
     public void validarCreacionCita(CreateCitaDto createCitaDto, DetalleDoctorDto detalleDoctorDto) {
-        DayOfWeek diaCita = createCitaDto.fechaHoaraCita().getDayOfWeek();
-        LocalTime horaCita = createCitaDto.fechaHoaraCita().toLocalTime();
+        DayOfWeek diaCita = createCitaDto.fechaHoraCita().getDayOfWeek();
+        LocalTime horaCita = createCitaDto.fechaHoraCita().toLocalTime();
 
         DetalleHorarioAtencionDto horarioDelDia = detalleDoctorDto.horarioAtencion().stream()
                 .filter(h-> h.diaDeSemana().equals(diaCita))

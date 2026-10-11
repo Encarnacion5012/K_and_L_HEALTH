@@ -108,9 +108,8 @@ public class CitaServiceImp implements ICitaService{
 
             validacionesReagendaCitas.forEach(vr-> vr.validarReagendaCita(
                     id_Cita,
-                    cita.getIdDoctor(),
-                    reagendarCitaDto.nuevaFechaHora(),
-                    cita.getIdPaciente()
+                    cita,
+                    reagendarCitaDto.nuevaFechaHora()
             ));
 
             cita.setFechaHoraCita(reagendarCitaDto.nuevaFechaHora());

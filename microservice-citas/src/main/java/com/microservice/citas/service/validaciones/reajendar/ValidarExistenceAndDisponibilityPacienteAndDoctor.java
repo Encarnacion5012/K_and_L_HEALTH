@@ -1,5 +1,7 @@
 package com.microservice.citas.service.validaciones.reajendar;
 
+import com.microservice.citas.http.response.doctor.DetalleDoctorDto;
+import com.microservice.citas.model.Cita;
 import com.microservice.citas.repository.CitaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,15 +15,15 @@ public class ValidarExistenceAndDisponibilityPacienteAndDoctor implements  Valid
 
     private final CitaRepository citaRepository;
 
-    @Override
-    public void validarReagendaCita( UUID id_CitaActual, UUID id_doctor, LocalDateTime fecha_Nueva_Consulta, UUID id_paciente) {
 
+    @Override
+    public void validarReagendaCita(UUID id_CitaActual, Cita cita, LocalDateTime fecha_Nueva_Consulta) {
         LocalDateTime fecha_Inicio = fecha_Nueva_Consulta.minusMinutes(30);
 
 
         boolean isUnavailable = citaRepository.existenceAndTimeVerificationByIdDoctorAndIdPaciente(
-               id_CitaActual ,id_doctor, fecha_Inicio, fecha_Nueva_Consulta, id_paciente
-                );
+                id_CitaActual ,cita.getIdDoctor(), fecha_Inicio, fecha_Nueva_Consulta, cita.getIdPaciente()
+        );
 
         if (isUnavailable){
             throw  new RuntimeException("NO se puede agendar la cita en este horario, el paciente o el medico tienen" +
