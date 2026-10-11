@@ -5,11 +5,12 @@ import com.microservice.citas.model.Cita;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 public interface ValidarReagendaCita {
     void validarReagendaCita(UUID id_CitaActual,
                              Cita cita ,
-                             LocalDateTime fecha_Nueva_Consulta
+                             ZonedDateTime fecha_Nueva_Consulta
                              );
 }

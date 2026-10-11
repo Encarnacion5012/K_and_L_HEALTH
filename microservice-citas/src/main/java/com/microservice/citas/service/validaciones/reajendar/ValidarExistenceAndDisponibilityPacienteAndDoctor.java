@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Component
@@ -17,8 +18,8 @@ public class ValidarExistenceAndDisponibilityPacienteAndDoctor implements  Valid
 
 
     @Override
-    public void validarReagendaCita(UUID id_CitaActual, Cita cita, LocalDateTime fecha_Nueva_Consulta) {
-        LocalDateTime fecha_Inicio = fecha_Nueva_Consulta.minusMinutes(30);
+    public void validarReagendaCita(UUID id_CitaActual, Cita cita, ZonedDateTime fecha_Nueva_Consulta) {
+        ZonedDateTime fecha_Inicio = fecha_Nueva_Consulta.minusMinutes(30);
 
 
         boolean isUnavailable = citaRepository.existenceAndTimeVerificationByIdDoctorAndIdPaciente(

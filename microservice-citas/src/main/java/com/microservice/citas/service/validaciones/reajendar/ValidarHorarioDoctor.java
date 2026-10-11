@@ -7,10 +7,7 @@ import com.microservice.citas.repository.CitaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +19,7 @@ public class ValidarHorarioDoctor implements ValidarReagendaCita{
     private final UserClient userClient;
 
     @Override
-    public void validarReagendaCita(UUID id_CitaActual, Cita cita, LocalDateTime fecha_Nueva_Consulta) {
+    public void validarReagendaCita(UUID id_CitaActual, Cita cita, ZonedDateTime fecha_Nueva_Consulta) {
 
         DayOfWeek diaCita = fecha_Nueva_Consulta.getDayOfWeek();
         LocalTime horaCita = fecha_Nueva_Consulta.toLocalTime();

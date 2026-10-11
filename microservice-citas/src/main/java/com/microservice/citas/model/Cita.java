@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Setter
@@ -34,7 +35,7 @@ public class Cita {
     private UUID idDoctor;
 
     @Column(name = "fecha_hora_cita")
-    private LocalDateTime fechaHoraCita;
+    private ZonedDateTime fechaHoraCita;
 
     @Column(name = "motivo")
     private String motivo;

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 public record CreateCitaDto(
@@ -17,7 +18,7 @@ public record CreateCitaDto(
 
         @Future(message = "La cita debe agendarse en una fecha futura")
 
-        LocalDateTime fechaHoraCita,
+        ZonedDateTime fechaHoraCita,
 
         @NotBlank(message = "EL motivo de la cita debe estar especificado")
         String motivo

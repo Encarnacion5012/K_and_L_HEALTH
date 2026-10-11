@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,8 +30,8 @@ public interface CitaRepository extends JpaRepository<Cita, UUID> {
     boolean existenceAndTimeVerificationByIdDoctorAndIdPaciente(
             @Param("id_Cita_actual") UUID id_Cita_actual,
             @Param("id_doctor") UUID id_doctor,
-            @Param("fecha_Hora_Inicio_Consulta") LocalDateTime fecha_Hora_Inicio_Consulta,
-            @Param("fecha_Hora_nueva_Cita") LocalDateTime fecha_Hora_nueva_Cita,
+            @Param("fecha_Hora_Inicio_Consulta") ZonedDateTime fecha_Hora_Inicio_Consulta,
+            @Param("fecha_Hora_nueva_Cita") ZonedDateTime fecha_Hora_nueva_Cita,
             @Param("id_paciente") UUID id_paciente
             );
 
