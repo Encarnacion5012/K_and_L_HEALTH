@@ -10,11 +10,10 @@ create table doctores(
     email varchar(120) not null,
     exequatur varchar(150) not null,
     activo boolean not null default true,
-    fecha_desactivacion date
+    fecha_desactivacion TIMESTAMPTZ,
+    precio_Consulta NUMERIC(10,2) not null,
 
-
-
-
+    constraint fecha_hora_desactivacion_valida check ( fecha_desactivacion <= NOW() )
     constraint valid_sexo CHECK ( sexo IN ('M','F'))
 
 )

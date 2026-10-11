@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -49,7 +50,7 @@ public class Doctor {
     private Boolean activo;
 
     @Column(name = "fecha_desactivacion")
-    private LocalDate fechaDesactivacion;
+    private Instant fechaDesactivacion;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "doctor")
     private List<HorarioAtencion> horarioAtencion;
@@ -88,7 +89,7 @@ public class Doctor {
             throw new IllegalStateException("Este doctor ya esta desactivado");
         }
         this.activo = false;
-        this.fechaDesactivacion = LocalDate.now();
+        this.fechaDesactivacion = Instant.now();
     }
 
     public void reactivarDoctor(){

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -41,7 +42,7 @@ public class Paciente {
     private String email;
 
     @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
@@ -51,7 +52,7 @@ public class Paciente {
     private boolean activo;
 
     @Column(name = "fecha_desactivacion")
-    private LocalDate fechaDesactivacion;
+    private Instant fechaDesactivacion;
 
 
     public void desactivarPaciente(){
@@ -59,7 +60,7 @@ public class Paciente {
             throw new IllegalStateException("Paciente ya esta desactivado");
         }
         this.activo = false;
-        this.fechaDesactivacion = LocalDate.now();
+        this.fechaDesactivacion = Instant.now();
     }
 
     public void reactivarPaciente(){

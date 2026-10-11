@@ -14,7 +14,7 @@ public interface PacienteMapperService {
     @Mapping(target = "idPaciente",  ignore = true)
     @Mapping(target = "nombre", source = "registroDTO.userRegisterDto.firstName")
     @Mapping(target = "apellido", source = "registroDTO.userRegisterDto.lastName")
-    @Mapping(target = "createdAt", expression = "java(java.time.OffsetDateTime.now())")
+    @Mapping(target = "createdAt", expression = "java(java.time.Instant.now())")
     @Mapping(target = "email", source = "registroDTO.userRegisterDto.email")
     @Mapping(target = "activo", constant = "true")
     @Mapping(target = "fechaDesactivacion", ignore = true)
