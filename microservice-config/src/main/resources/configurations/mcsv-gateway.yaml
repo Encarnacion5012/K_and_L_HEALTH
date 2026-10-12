@@ -5,6 +5,10 @@ server:
 spring:
   application:
     name: mcsv-gateway
+  threats:
+    virtual:
+      enabled: true
+
 
   cloud:
 

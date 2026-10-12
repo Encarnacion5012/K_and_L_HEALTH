@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: mcsv-users
+  threats:
+    virtual:
+      enabled: true
+
 
   security:
     oauth2:
