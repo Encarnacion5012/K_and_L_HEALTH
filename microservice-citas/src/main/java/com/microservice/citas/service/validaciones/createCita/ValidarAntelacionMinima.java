@@ -6,12 +6,13 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Component
 public class ValidarAntelacionMinima implements ValidarCreacionCita {
     @Override
     public void validarCreacionCita(CreateCitaDto createCitaDto, DetalleDoctorDto detalleDoctorDto) {
-        LocalDateTime ahora = LocalDateTime.now();
+        ZonedDateTime ahora = ZonedDateTime.now();
         LocalDate hoy = LocalDate.now();
 
         if (createCitaDto.fechaHoraCita().toLocalDate().isEqual(hoy) && !createCitaDto.fechaHoraCita().isBefore(ahora.plusHours(1))) {

@@ -11,9 +11,9 @@ create table doctores(
     exequatur varchar(150) not null,
     activo boolean not null default true,
     fecha_desactivacion TIMESTAMPTZ,
-    precio_Consulta NUMERIC(10,2) not null,
+    precio_consulta NUMERIC(10,2) not null,
 
-    constraint fecha_hora_desactivacion_valida check ( fecha_desactivacion <= NOW() )
+    constraint fecha_hora_desactivacion_valida check ( fecha_desactivacion <= NOW() ),
     constraint valid_sexo CHECK ( sexo IN ('M','F'))
 
 )

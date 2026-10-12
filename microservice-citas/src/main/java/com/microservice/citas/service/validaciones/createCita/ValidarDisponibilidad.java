@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -16,7 +17,7 @@ public class ValidarDisponibilidad implements ValidarCreacionCita{
 
     @Override
     public void validarCreacionCita(CreateCitaDto createCitaDto, DetalleDoctorDto detalleDoctorDto) {
-        LocalDateTime fechaInicioConsulta = LocalDateTime.now().minusMinutes(30);
+        ZonedDateTime fechaInicioConsulta = ZonedDateTime.now().minusMinutes(30);
 
         boolean citaOcupada = citaRepository
                 .existenceAndTimeVerificationByIdDoctorAndIdPaciente(

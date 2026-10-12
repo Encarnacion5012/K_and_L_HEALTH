@@ -13,7 +13,7 @@ CREATE TABLE pacientes(
     activo boolean not null default true,
     fecha_desactivacion TIMESTAMPTZ DEFAULT NULL,
 
-    constraint fecha_hora_desactivacion_valida check ( fecha_desactivacion <= NOW() )
+    constraint fecha_hora_desactivacion_valida check ( fecha_desactivacion <= NOW() ),
 
     constraint sexo_valido CHECK (sexo IN ('M', 'F'))
 

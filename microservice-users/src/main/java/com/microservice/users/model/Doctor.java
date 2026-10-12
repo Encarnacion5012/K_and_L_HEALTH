@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -48,6 +49,9 @@ public class Doctor {
     private  String email;
 
     private Boolean activo;
+
+    @Column(name = "precio_consulta")
+    private BigDecimal precioConsulta;
 
     @Column(name = "fecha_desactivacion")
     private Instant fechaDesactivacion;
