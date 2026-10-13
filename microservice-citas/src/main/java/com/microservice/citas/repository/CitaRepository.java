@@ -47,6 +47,11 @@ public interface CitaRepository extends JpaRepository<Cita, UUID> {
     AND c.estado IN (com.microservice.citas.model.Estado_Cita.AGENDADA, com.microservice.citas.model.Estado_Cita.REAGENDADA)
            
     """)
-    Optional<Cita> findByIdAndEstadoAgendadaAndReagendada(@Param("id_Cita") UUID id_Cita) ;
+    Optional<Cita> findByIdAndEstadoAgendadaAndReagendada(@Param("id_Cita") UUID id_Cita);
 
+    @Query(value = """
+    SELECT c FROM Cita c
+    where c.idPaciente =:id or c.idDoctor=:id
+""")
+    Optional<Cita> findBYIdDoctorOrIdPaciente(@Param("id") UUID id);
 }

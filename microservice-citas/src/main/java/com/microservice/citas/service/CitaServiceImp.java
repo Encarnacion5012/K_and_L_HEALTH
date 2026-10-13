@@ -40,8 +40,8 @@ public class CitaServiceImp implements ICitaService{
 
         try {
 
-            DetallePacienteDto pacienteDto = userClient.findByIdPaciente(createCitaDto.idPaciente());
-            DetalleDoctorDto doctor = userClient.findDoctorById(createCitaDto.idDoctor());
+            DetallePacienteDto pacienteDto = getPacienteDetailsHelper(createCitaDto.idPaciente());
+            DetalleDoctorDto doctor = getDocotorDetailsHelper(createCitaDto.idDoctor());
 
             validacionesAGendaCitas.forEach(v-> v.validarCreacionCita(createCitaDto, doctor));
 
@@ -71,10 +71,10 @@ public class CitaServiceImp implements ICitaService{
                 .map(Cita::getIdDoctor)
                 .toSet();
         Map<UUID, DetallePacienteDto> pacienteDtoMap = id_Pacientes.stream()
-                .collect(Collectors.toMap(id-> id, userClient::findByIdPaciente));
+                .collect(Collectors.toMap(id-> id, this::getPacienteDetailsHelper));
 
         Map<UUID, DetalleDoctorDto> doctorDtoMap = id_Doctors.stream()
-                .collect(Collectors.toMap(id-> id, userClient::findDoctorById));
+                .collect(Collectors.toMap(id-> id, this::getDocotorDetailsHelper));
 
         return citas
                 .map(c-> citaMapperService.entitysToDetalleDto(
@@ -124,5 +124,48 @@ public class CitaServiceImp implements ICitaService{
     private Cita findByidHelper(UUID id_Cita){
         return  citaRepository.findById(id_Cita)
                 .orElseThrow(()-> new EntityNotFoundException("Cita no encontrada con id: " + id_Cita));
+    }
+
+    private DetalleDoctorDto getDocotorDetailsHelper(UUID idDoctor){
+        return userClient.findDoctorById(idDoctor);
+    }
+
+    private DetallePacienteDto getPacienteDetailsHelper(UUID idPaciente){
+        return userClient.findByIdPaciente(idPaciente);
+    }
+
+    @Override
+    public DetalleCitaDto findByIdDoctorOrIdPaciente(UUID id, String paramName) {
+        Cita cita;
+        DetallePacienteDto paciente;
+        DetalleDoctorDto doctor;
+
+        try {
+            cita = citaRepository.findBYIdDoctorOrIdPaciente(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada con id_" + paramName + " " + id));
+
+            paciente = getPacienteDetailsHelper(cita.getIdPaciente());
+            doctor = getDocotorDetailsHelper(cita.getIdDoctor());
+
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+
+        return citaMapperService.entitysToDetalleDto(doctor,paciente,cita);
+    }
+
+    @Override
+    public DetalleCitaDto findByIdCitaGenaral(UUID idCita) {
+        Cita cita;
+        DetallePacienteDto paciente;
+        DetalleDoctorDto doctor;
+        try{
+            cita = findByidHelper(idCita);
+            paciente = getPacienteDetailsHelper(cita.getIdPaciente());
+            doctor = getDocotorDetailsHelper(cita.getIdDoctor());
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        return citaMapperService.entitysToDetalleDto(doctor,paciente,cita);
     }
 }

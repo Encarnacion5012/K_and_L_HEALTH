@@ -48,6 +48,25 @@ public class CitaController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/find_by_idDoctor/{idDoctor}")
+    public ResponseEntity<DetalleCitaDto> findByIdDoctor(@PathVariable UUID idDoctor){
+        DetalleCitaDto cita = citaService.findByIdDoctorOrIdPaciente(idDoctor, "Doctor");
+        return ResponseEntity.ok().body(cita);
+    }
+
+    @GetMapping("/find_by_idDoctor/{IdPaciente}")
+    public ResponseEntity<DetalleCitaDto> findByIdPaciente(@PathVariable UUID IdPaciente){
+        DetalleCitaDto cita = citaService.findByIdDoctorOrIdPaciente(IdPaciente, "Paciente");
+        return ResponseEntity.ok().body(cita);
+    }
+
+    @GetMapping("/find_by_id_General/{idCita}")
+    public ResponseEntity<DetalleCitaDto> findByIdGeneral(@PathVariable UUID idCita){
+        DetalleCitaDto cita = citaService.findByIdCitaGenaral(idCita);
+        return ResponseEntity.ok().body(cita);
+    }
+
+
 
 
 
