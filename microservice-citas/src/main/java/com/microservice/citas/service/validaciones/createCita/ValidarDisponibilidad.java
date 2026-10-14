@@ -17,14 +17,15 @@ public class ValidarDisponibilidad implements ValidarCreacionCita{
 
     @Override
     public void validarCreacionCita(CreateCitaDto createCitaDto, DetalleDoctorDto detalleDoctorDto) {
-        ZonedDateTime fechaInicioConsulta = ZonedDateTime.now().minusMinutes(30);
+        ZonedDateTime rangoConsultaInicio = createCitaDto.fechaHoraCita().minusMinutes(30);
+        ZonedDateTime rangoConsultaFin =  createCitaDto.fechaHoraCita().plusMinutes(30);
 
         boolean citaOcupada = citaRepository
                 .existenceAndTimeVerificationByIdDoctorAndIdPaciente(
                         null,
                         createCitaDto.idDoctor(),
-                        fechaInicioConsulta,
-                        createCitaDto.fechaHoraCita(),
+                        rangoConsultaInicio,
+                        rangoConsultaFin,
                         createCitaDto.idPaciente()
                 );
 

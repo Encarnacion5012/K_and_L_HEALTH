@@ -12,10 +12,8 @@ import java.time.ZonedDateTime;
 public class ValidarAntelacionMinima implements ValidarCreacionCita {
     @Override
     public void validarCreacionCita(CreateCitaDto createCitaDto, DetalleDoctorDto detalleDoctorDto) {
-        ZonedDateTime ahora = ZonedDateTime.now();
-        LocalDate hoy = LocalDate.now();
-
-        if (createCitaDto.fechaHoraCita().toLocalDate().isEqual(hoy) && !createCitaDto.fechaHoraCita().isBefore(ahora.plusHours(1))) {
+        ZonedDateTime horaMinimaAntelacion = ZonedDateTime.now().plusHours(1);
+        if (createCitaDto.fechaHoraCita().isBefore(horaMinimaAntelacion)) {
             throw new RuntimeException("Las citas deben agendarse con una hora de antelacion");
         }
     }

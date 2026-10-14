@@ -23,15 +23,15 @@ public interface CitaRepository extends JpaRepository<Cita, UUID> {
     (:id_Cita_actual IS NULL OR c.idCita !=:id_Cita_actual)
     AND(c.idDoctor=:id_doctor OR c.idPaciente=:id_paciente) 
     AND c.estado IN (com.microservice.citas.model.Estado_Cita.AGENDADA, com.microservice.citas.model.Estado_Cita.REAGENDADA)
-    AND c.fechaHoraCita BETWEEN :fecha_Hora_Inicio_Consulta AND :fecha_Hora_nueva_Cita 
+    AND c.fechaHoraCita BETWEEN :rangoConsultaInicio AND :rangoConsultaFin 
    
     ) 
 """)
     boolean existenceAndTimeVerificationByIdDoctorAndIdPaciente(
             @Param("id_Cita_actual") UUID id_Cita_actual,
             @Param("id_doctor") UUID id_doctor,
-            @Param("fecha_Hora_Inicio_Consulta") ZonedDateTime fecha_Hora_Inicio_Consulta,
-            @Param("fecha_Hora_nueva_Cita") ZonedDateTime fecha_Hora_nueva_Cita,
+            @Param("rangoConsultaInicio") ZonedDateTime rangoConsultaInicio,
+            @Param("rangoConsultaFin") ZonedDateTime rangoConsultaFin,
             @Param("id_paciente") UUID id_paciente
             );
 

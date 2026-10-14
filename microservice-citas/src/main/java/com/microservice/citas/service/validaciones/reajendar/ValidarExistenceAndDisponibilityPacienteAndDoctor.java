@@ -19,11 +19,12 @@ public class ValidarExistenceAndDisponibilityPacienteAndDoctor implements  Valid
 
     @Override
     public void validarReagendaCita(UUID id_CitaActual, Cita cita, ZonedDateTime fecha_Nueva_Consulta) {
-        ZonedDateTime fecha_Inicio = fecha_Nueva_Consulta.minusMinutes(30);
+        ZonedDateTime inicioRango = fecha_Nueva_Consulta.minusMinutes(30);
+        ZonedDateTime finRango = fecha_Nueva_Consulta.plusMinutes(30);
 
 
         boolean isUnavailable = citaRepository.existenceAndTimeVerificationByIdDoctorAndIdPaciente(
-                id_CitaActual ,cita.getIdDoctor(), fecha_Inicio, fecha_Nueva_Consulta, cita.getIdPaciente()
+                id_CitaActual ,cita.getIdDoctor(), inicioRango, finRango, cita.getIdPaciente()
         );
 
         if (isUnavailable){
