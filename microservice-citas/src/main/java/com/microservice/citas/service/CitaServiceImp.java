@@ -4,6 +4,9 @@ import com.microservice.citas.clients.UserClient;
 import com.microservice.citas.dto.CreateCitaDto;
 import com.microservice.citas.dto.DetalleCitaDto;
 import com.microservice.citas.dto.ReagendarCitaDto;
+import com.microservice.citas.exception.custom.AgendarException;
+import com.microservice.citas.exception.custom.CancelarCitaException;
+import com.microservice.citas.exception.custom.ReagendarException;
 import com.microservice.citas.http.response.doctor.DetalleDoctorDto;
 import com.microservice.citas.http.response.paciente.DetallePacienteDto;
 import com.microservice.citas.mapper.CitaMapperService;
@@ -30,7 +33,7 @@ import java.util.stream.Collectors;
 public class CitaServiceImp implements ICitaService{
     private final UserClient userClient;
     private final CitaRepository citaRepository;
-    private final List<ValidarCreacionCita> validacionesAGendaCitas;
+    private final List<ValidarCreacionCita> validacionesAendaCitas;
     private final List<ValidarReagendaCita> validacionesReagendaCitas;
     private final CitaMapperService citaMapperService;
 
@@ -43,7 +46,7 @@ public class CitaServiceImp implements ICitaService{
             DetallePacienteDto pacienteDto = getPacienteDetailsHelper(createCitaDto.idPaciente());
             DetalleDoctorDto doctor = getDocotorDetailsHelper(createCitaDto.idDoctor());
 
-            validacionesAGendaCitas.forEach(v-> v.validarCreacionCita(createCitaDto, doctor));
+            validacionesAendaCitas.forEach(v-> v.validarCreacionCita(createCitaDto, doctor));
 
             Cita cita = citaMapperService.createDtoToEntity(createCitaDto);
 
@@ -53,7 +56,7 @@ public class CitaServiceImp implements ICitaService{
 
 
         }catch (Exception e){
-            throw new RuntimeException(e.getMessage());
+            throw new AgendarException(e.getMessage(), e);
         }
 
 
@@ -63,25 +66,7 @@ public class CitaServiceImp implements ICitaService{
     public Page<DetalleCitaDto> findAllAgendadaAndReagendada(Pageable pageable) {
         Page<Cita> citas = citaRepository.findAllAgendadaAndReagendada(pageable);
 
-        Set<UUID> id_Pacientes = citas
-                .map(Cita::getIdPaciente)
-                .toSet();
-
-        Set<UUID>id_Doctors = citas
-                .map(Cita::getIdDoctor)
-                .toSet();
-        Map<UUID, DetallePacienteDto> pacienteDtoMap = id_Pacientes.stream()
-                .collect(Collectors.toMap(id-> id, this::getPacienteDetailsHelper));
-
-        Map<UUID, DetalleDoctorDto> doctorDtoMap = id_Doctors.stream()
-                .collect(Collectors.toMap(id-> id, this::getDocotorDetailsHelper));
-
-        return citas
-                .map(c-> citaMapperService.entitysToDetalleDto(
-                        doctorDtoMap.get(c.getIdDoctor()),
-                        pacienteDtoMap.get(c.getIdPaciente()),
-                        c
-                )) ;
+        return pageCitaToPageDetalleCitaDtoHelper(citas);
     }
 
     @Override
@@ -94,7 +79,7 @@ public class CitaServiceImp implements ICitaService{
             citaRepository.flush();
 
         }catch (Exception e){
-            throw new RuntimeException("Ha ocurrido un error al desactivar la cita con id: " + id_Cita,e);
+            throw new CancelarCitaException("Ha ocurrido un error al desactivar la cita con id: " + id_Cita,e);
         }
     }
 
@@ -117,7 +102,7 @@ public class CitaServiceImp implements ICitaService{
             citaRepository.flush();
 
         }catch (Exception e){
-            throw new RuntimeException("Ha ocurrido un error al Reagendar la cita con id: " +  id_Cita,e);
+            throw new ReagendarException("Ha ocurrido un error al Reagendar la cita con id: " +  id_Cita,e);
         }
     }
 
@@ -134,24 +119,34 @@ public class CitaServiceImp implements ICitaService{
         return userClient.findByIdPaciente(idPaciente);
     }
 
+    private Page<DetalleCitaDto> pageCitaToPageDetalleCitaDtoHelper(Page<Cita> citas) {
+
+      Set<UUID>id_Docotores = citas.stream()
+              .map(Cita::getIdDoctor)
+              .collect(Collectors.toSet());
+      Set<UUID> id_Pacientes = citas.stream()
+              .map(Cita::getIdPaciente)
+              .collect(Collectors.toSet());
+
+      Map<UUID, DetalleDoctorDto> doctoresMap = id_Docotores.stream()
+              .collect(Collectors.toMap(id-> id, this::getDocotorDetailsHelper));
+
+      Map<UUID, DetallePacienteDto> pacientesMap = id_Pacientes.stream()
+              .collect(Collectors.toMap(id-> id, this::getPacienteDetailsHelper));
+
+        return citas.map(c-> citaMapperService.entitysToDetalleDto(
+                doctoresMap.get(c.getIdDoctor()),
+                pacientesMap.get(c.getIdPaciente()),
+                c
+        ));
+    }
+
     @Override
-    public DetalleCitaDto findByIdDoctorOrIdPaciente(UUID id, String paramName) {
-        Cita cita;
-        DetallePacienteDto paciente;
-        DetalleDoctorDto doctor;
+    public Page<DetalleCitaDto> findByIdDoctorOrIdPaciente(UUID id,  Pageable pageable) {
 
-        try {
-            cita = citaRepository.findBYIdDoctorOrIdPaciente(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada con id_" + paramName + " " + id));
+        Page<Cita> citas = citaRepository.findBYIdDoctorOrIdPaciente(id, pageable);
 
-            paciente = getPacienteDetailsHelper(cita.getIdPaciente());
-            doctor = getDocotorDetailsHelper(cita.getIdDoctor());
-
-        }catch (Exception e){
-            throw new RuntimeException(e);
-        }
-
-        return citaMapperService.entitysToDetalleDto(doctor,paciente,cita);
+        return pageCitaToPageDetalleCitaDtoHelper(citas);
     }
 
     @Override

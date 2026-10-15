@@ -1,6 +1,7 @@
 package com.microservice.citas.service.validaciones.createCita;
 
 import com.microservice.citas.dto.CreateCitaDto;
+import com.microservice.citas.exception.custom.HorarioValidationException;
 import com.microservice.citas.http.response.doctor.DetalleDoctorDto;
 import com.microservice.citas.http.response.doctor.DetalleHorarioAtencionDto;
 
@@ -21,7 +22,7 @@ public class ValidarHorarioDoctor implements ValidarCreacionCita{
         boolean horaValida = !horaCita.isBefore(horarioDelDia.horaInicio()) && !horaCita.isAfter(horarioDelDia.horaFin());
 
         if (!horaValida) {
-            throw new IllegalArgumentException("La hora seleccionada (" + horaCita +
+            throw new HorarioValidationException("La hora seleccionada (" + horaCita +
                     ") está fuera del horario de atención del doctor (" +
                     horarioDelDia.horaInicio() + " - " + horarioDelDia.horaFin() + ")");
         }

@@ -3,6 +3,7 @@ package com.microservice.citas.controller;
 import com.microservice.citas.dto.CreateCitaDto;
 import com.microservice.citas.dto.DetalleCitaDto;
 import com.microservice.citas.dto.ReagendarCitaDto;
+import com.microservice.citas.model.Cita;
 import com.microservice.citas.service.ICitaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -49,18 +50,21 @@ public class CitaController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','RECEPCIONISTA')")
     @GetMapping("/find_by_idDoctor/{idDoctor}")
-    public ResponseEntity<DetalleCitaDto> findByIdDoctor(@PathVariable UUID idDoctor){
-        DetalleCitaDto cita = citaService.findByIdDoctorOrIdPaciente(idDoctor, "Doctor");
-        return ResponseEntity.ok().body(cita);
+    public ResponseEntity<Page<DetalleCitaDto>> findByIdDoctor(@PathVariable UUID idDoctor, @PageableDefault(size = 10) Pageable pageable){
+        Page<DetalleCitaDto> citas = citaService.findByIdDoctorOrIdPaciente(idDoctor,pageable );
+        return ResponseEntity.ok().body(citas);
     }
 
-    @GetMapping("/find_by_idDoctor/{IdPaciente}")
-    public ResponseEntity<DetalleCitaDto> findByIdPaciente(@PathVariable UUID IdPaciente){
-        DetalleCitaDto cita = citaService.findByIdDoctorOrIdPaciente(IdPaciente, "Paciente");
-        return ResponseEntity.ok().body(cita);
+    @PreAuthorize("hasAnyRole('ADMIN','PACIENTE','RECEPCIONISTA')")
+    @GetMapping("/find_by_idPaciente/{IdPaciente}")
+    public ResponseEntity<Page<DetalleCitaDto>> findByIdPaciente(@PathVariable UUID IdPaciente, @PageableDefault(size = 10) Pageable pageable){
+        Page<DetalleCitaDto> citas = citaService.findByIdDoctorOrIdPaciente(IdPaciente,pageable );
+        return ResponseEntity.ok().body(citas);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','RECEPCIONISTA')")
     @GetMapping("/find_by_id_General/{idCita}")
     public ResponseEntity<DetalleCitaDto> findByIdGeneral(@PathVariable UUID idCita){
         DetalleCitaDto cita = citaService.findByIdCitaGenaral(idCita);

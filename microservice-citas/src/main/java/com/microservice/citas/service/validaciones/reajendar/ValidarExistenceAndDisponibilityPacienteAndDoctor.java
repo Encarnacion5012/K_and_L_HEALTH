@@ -1,5 +1,6 @@
 package com.microservice.citas.service.validaciones.reajendar;
 
+import com.microservice.citas.exception.custom.DisponibilidadValidationException;
 import com.microservice.citas.http.response.doctor.DetalleDoctorDto;
 import com.microservice.citas.model.Cita;
 import com.microservice.citas.repository.CitaRepository;
@@ -28,7 +29,7 @@ public class ValidarExistenceAndDisponibilityPacienteAndDoctor implements  Valid
         );
 
         if (isUnavailable){
-            throw  new RuntimeException("NO se puede agendar la cita en este horario, el paciente o el medico tienen" +
+            throw  new DisponibilidadValidationException("NO se puede agendar la cita en este horario, el paciente o el medico tienen" +
                     " una cita agendada a menos de 30 minutos de esta");
         }
     }

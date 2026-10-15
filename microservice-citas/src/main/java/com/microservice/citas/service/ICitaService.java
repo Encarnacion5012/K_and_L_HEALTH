@@ -13,7 +13,7 @@ public interface ICitaService {
     Page<DetalleCitaDto> findAllAgendadaAndReagendada (Pageable pageable);
     void cancelarCita(UUID id_Cita);
     void reagendarCita(UUID id_Cita, ReagendarCitaDto reagendarCitaDto);
-    DetalleCitaDto findByIdDoctorOrIdPaciente(UUID idDoctor, String paramName);
+    Page<DetalleCitaDto> findByIdDoctorOrIdPaciente(UUID idDoctor, Pageable pageable);
     DetalleCitaDto findByIdCitaGenaral(UUID idCita);
 
 }

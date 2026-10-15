@@ -1,6 +1,7 @@
 package com.microservice.citas.service.validaciones.createCita;
 
 import com.microservice.citas.dto.CreateCitaDto;
+import com.microservice.citas.exception.custom.DisponibilidadValidationException;
 import com.microservice.citas.http.response.doctor.DetalleDoctorDto;
 import com.microservice.citas.model.Estado_Cita;
 import com.microservice.citas.repository.CitaRepository;
@@ -30,7 +31,7 @@ public class ValidarDisponibilidad implements ValidarCreacionCita{
                 );
 
         if (citaOcupada) {
-            throw new IllegalArgumentException("El doctor o el paciente ya tienen una cita reservada a" +
+            throw new DisponibilidadValidationException("El doctor o el paciente ya tienen una cita reservada a" +
                     " menos de 30 minutos de la fechaHora deseada");
         }
         }

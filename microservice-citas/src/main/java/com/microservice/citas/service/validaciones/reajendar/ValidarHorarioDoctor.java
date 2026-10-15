@@ -1,6 +1,7 @@
 package com.microservice.citas.service.validaciones.reajendar;
 
 import com.microservice.citas.clients.UserClient;
+import com.microservice.citas.exception.custom.HorarioValidationException;
 import com.microservice.citas.http.response.doctor.DetalleHorarioAtencionDto;
 import com.microservice.citas.model.Cita;
 import com.microservice.citas.repository.CitaRepository;
@@ -34,7 +35,7 @@ public class ValidarHorarioDoctor implements ValidarReagendaCita{
         boolean horaValida = horaCita.isAfter(horarioValido.horaInicio()) && horaCita.isBefore(horarioValido.horaFin());
 
         if (!horaValida) {
-            throw new IllegalArgumentException("La hora seleccionada (" + horaCita +
+            throw new HorarioValidationException("La hora seleccionada (" + horaCita +
                     ") está fuera del horario de atención del doctor (" +
                     horarioValido.horaInicio() + " - " + horarioValido.horaFin() + ")");
         }
