@@ -53,14 +53,14 @@ public class CitaController {
     @PreAuthorize("hasAnyRole('ADMIN','RECEPCIONISTA')")
     @GetMapping("/find_by_idDoctor/{idDoctor}")
     public ResponseEntity<Page<DetalleCitaDto>> findByIdDoctor(@PathVariable UUID idDoctor, @PageableDefault(size = 10) Pageable pageable){
-        Page<DetalleCitaDto> citas = citaService.findByIdDoctorOrIdPaciente(idDoctor,pageable );
+        Page<DetalleCitaDto> citas = citaService.findByidDoctor(idDoctor,pageable);
         return ResponseEntity.ok().body(citas);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','PACIENTE','RECEPCIONISTA')")
     @GetMapping("/find_by_idPaciente/{IdPaciente}")
     public ResponseEntity<Page<DetalleCitaDto>> findByIdPaciente(@PathVariable UUID IdPaciente, @PageableDefault(size = 10) Pageable pageable){
-        Page<DetalleCitaDto> citas = citaService.findByIdDoctorOrIdPaciente(IdPaciente,pageable );
+        Page<DetalleCitaDto> citas = citaService.findByidPaciente(IdPaciente,pageable );
         return ResponseEntity.ok().body(citas);
     }
 

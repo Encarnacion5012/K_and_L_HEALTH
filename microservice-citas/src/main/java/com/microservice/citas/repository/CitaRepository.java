@@ -49,9 +49,8 @@ public interface CitaRepository extends JpaRepository<Cita, UUID> {
     """)
     Optional<Cita> findByIdAndEstadoAgendadaAndReagendada(@Param("id_Cita") UUID id_Cita);
 
-    @Query(value = """
-    SELECT c FROM Cita c
-    where c.idPaciente =:id or c.idDoctor=:id
-""")
-    Page<Cita> findBYIdDoctorOrIdPaciente(@Param("id") UUID id, Pageable pageable);
+
+    Page<Cita> findByIdDoctor(UUID id_Doctor, Pageable pageable);
+
+    Page<Cita> findByIdPaciente(UUID idPaciente, Pageable pageable);
 }
