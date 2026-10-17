@@ -5,6 +5,8 @@ import com.microservice.citas.dto.DetalleCitaDto;
 import com.microservice.citas.dto.ReagendarCitaDto;
 import com.microservice.citas.model.Cita;
 import com.microservice.citas.service.ICitaService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +25,7 @@ public class CitaController {
 
     @PreAuthorize("hasAnyRole('ADMIN','PACIENTE','RECEPCIONISTA')")
     @PostMapping("/create_cita")
-    public ResponseEntity<DetalleCitaDto> createCita(@RequestBody CreateCitaDto createDto) {
+    public ResponseEntity<DetalleCitaDto> createCita(@RequestBody @Valid CreateCitaDto createDto) {
         DetalleCitaDto cita = citaService.create(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(cita);
     }
@@ -69,6 +71,13 @@ public class CitaController {
     public ResponseEntity<DetalleCitaDto> findByIdGeneral(@PathVariable UUID idCita){
         DetalleCitaDto cita = citaService.findByIdCitaGenaral(idCita);
         return ResponseEntity.ok().body(cita);
+    }
+
+    @GetMapping("find_by_cedula_Paciente/{cedulaPaciente}")
+    public ResponseEntity<Page<DetalleCitaDto>> findByCedulaPaciente(@PathVariable @NotBlank(message = "La cedula no debe estar en blanco")
+                                                                         String  cedulaPaciente, @PageableDefault(size = 10) Pageable pageable){
+      Page<DetalleCitaDto> citas = citaService.findByCedulaPaciente(cedulaPaciente,pageable);
+      return ResponseEntity.ok().body(citas);
     }
 
 

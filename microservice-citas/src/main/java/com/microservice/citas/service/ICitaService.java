@@ -16,5 +16,6 @@ public interface ICitaService {
     Page<DetalleCitaDto> findByidPaciente(UUID idPaciente,Pageable pageable);
     Page<DetalleCitaDto> findByidDoctor(UUID idDoctor,Pageable pageable);
     DetalleCitaDto findByIdCitaGenaral(UUID idCita);
+    Page<DetalleCitaDto> findByCedulaPaciente(String cedulaPaciente, Pageable pageable);
 
 }

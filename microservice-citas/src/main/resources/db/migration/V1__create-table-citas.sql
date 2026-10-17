@@ -6,7 +6,7 @@ create table citas(
     motivo varchar(130) not null,
     estado varchar(20) not null DEFAULT 'AGENDADA',
     reagendada boolean not null default false,
-    constraint estado_valido check (estado IN ('AGENDADA', 'CANCELADA', 'ATENDIDA', 'REAGENDADA')),
+    constraint estado_valido check (estado IN ('AGENDADA', 'CANCELADA', 'COMPLETADA', 'REAGENDADA')),
     constraint fecha_hora_cita_futura check ( fecha_hora_cita > NOW())
 
 )

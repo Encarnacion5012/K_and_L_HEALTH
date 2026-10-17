@@ -25,8 +25,8 @@
         <module name="microservice-config" />
         <module name="microservice-historial-clinico" />
         <module name="microservice-citas" />
-        <module name="microservice-users" />
         <module name="microservice-eureka" />
+        <module name="microservice-users" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

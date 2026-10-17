@@ -134,6 +134,22 @@ public class CitaServiceImp implements ICitaService{
         return citaMapperService.entitysToDetalleDto(doctor,paciente,cita);
     }
 
+    @Override
+    public Page<DetalleCitaDto> findByCedulaPaciente(String cedulaPaciente, Pageable pageable) {
+        DetallePacienteDto paciente = userClient.findByCedulaPaciente(cedulaPaciente);
+        Page<Cita> citas = citaRepository.findByIdPaciente(paciente.idPaciente(), pageable);
+
+        Set<UUID> idDoctors = pageCitasToSetIdDoctoresHelper(citas);
+
+        Map<UUID, DetalleDoctorDto> mapDoctores = setOfIdDotoresToMapHelper(idDoctors);
+
+
+        return citas.map( c-> citaMapperService.entitysToDetalleDto(
+                mapDoctores.get(c.getIdDoctor()),
+                paciente,
+                c
+        ));
+    }
 
     //====================================================================================
     //Helpers Internos
