@@ -67,13 +67,14 @@ public class CitaServiceImp implements ICitaService{
     public void cancelarCita(UUID id_Cita) {
             Cita cita = findByidHelper(id_Cita);
 
+        if (cita.getEstado() == Estado_Cita.CANCELADA){
+            throw new  CancelarCitaException("La cita ya se encuentra calcelada");
+        }
             cita.cancelarCita();
 
             citaRepository.flush();
 
-            if (cita.getEstado() == Estado_Cita.CANCELADA){
-                throw new  CancelarCitaException("La cita ya se encuentra calcelada");
-            }
+
     }
 
     @Override
@@ -118,7 +119,7 @@ public class CitaServiceImp implements ICitaService{
         Page<Cita> citas =  citaRepository.findByIdDoctor(idDoctor, pageable);
         DetalleDoctorDto doctor =  getDocotorDetailsHelper(idDoctor);
 
-        Set<UUID> idPacientes = citas.map(Cita::getIdPaciente).toSet();
+        Set<UUID> idPacientes = pageCitasToSetIdPacientesHelper(citas);
 
         Map<UUID, DetallePacienteDto> mapPacientes = setOfIdPacientesToMapHelper(idPacientes);
 
@@ -163,12 +164,10 @@ public class CitaServiceImp implements ICitaService{
                 .orElseThrow(()-> new EntityNotFoundException("Cita no encontrada con id: " + id_Cita));
     }
 
-    @CircuitBreaker(name = "userClient", fallbackMethod = "fallbackgetDocotorDetailsHelper")
     private DetalleDoctorDto getDocotorDetailsHelper(UUID idDoctor){
         return userClientAdapter.findDoctorById(idDoctor);
     }
 
-    @CircuitBreaker(name = "userClient", fallbackMethod = "fallbackgetPacienteDetailsHelper")
     private DetallePacienteDto getPacienteDetailsHelper(UUID idPaciente){
         return userClientAdapter.findByIdPaciente(idPaciente);
     }

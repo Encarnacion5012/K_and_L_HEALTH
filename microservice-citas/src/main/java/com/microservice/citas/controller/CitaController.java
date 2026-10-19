@@ -3,7 +3,6 @@ package com.microservice.citas.controller;
 import com.microservice.citas.dto.CreateCitaDto;
 import com.microservice.citas.dto.DetalleCitaDto;
 import com.microservice.citas.dto.ReagendarCitaDto;
-import com.microservice.citas.model.Cita;
 import com.microservice.citas.service.ICitaService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -14,9 +13,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
+@Validated
 @RestController
 @RequestMapping("/api/citas")
 @RequiredArgsConstructor
@@ -73,6 +74,7 @@ public class CitaController {
         return ResponseEntity.ok().body(cita);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','RECEPCIONISTA')")
     @GetMapping("find_by_cedula_Paciente/{cedulaPaciente}")
     public ResponseEntity<Page<DetalleCitaDto>> findByCedulaPaciente(@PathVariable @NotBlank(message = "La cedula no debe estar en blanco")
                                                                          String  cedulaPaciente, @PageableDefault(size = 10) Pageable pageable){
