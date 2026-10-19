@@ -18,6 +18,6 @@ public interface UserClient {
     @GetMapping("/pacientes/find_by_id/{id_paciente}")
     DetallePacienteDto findByIdPaciente(@PathVariable UUID id_paciente);
 
-    @GetMapping("/find_by_cedula/{cedula}")
+    @GetMapping("/pacientes/find_by_cedula/{cedula}")
     DetallePacienteDto findByCedulaPaciente(@PathVariable String cedula);
 }

@@ -53,3 +53,31 @@ logging:
     # Loggers específicos para ver SQL estructurado y parámetros '?'
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+
+management:
+  tracing:
+    simpling:
+      probability: 1.0
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    health:
+      show-details: always
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userClient: # Mismo nombre que se uuara en la anotación @CircuitBreaker
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50           # Si el 50% de las peticiones fallan, abre el circuito
+        minimumNumberOfCalls: 5            # Mínimo de llamadas antes de calcular el ratio
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s        # Tiempo que espera antes de pasar a semi-abierto
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        ignoreExceptions:
+          - feign.FeignException.NotFound
+          - jakarta.persistence.EntityNotFoundException

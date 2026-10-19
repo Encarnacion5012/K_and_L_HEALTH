@@ -1,6 +1,6 @@
 package com.microservice.citas.service;
 
-import com.microservice.citas.clients.UserClient;
+import com.microservice.citas.adapters.UserClientAdapter;
 import com.microservice.citas.dto.CreateCitaDto;
 import com.microservice.citas.dto.DetalleCitaDto;
 import com.microservice.citas.dto.ReagendarCitaDto;
@@ -13,9 +13,11 @@ import com.microservice.citas.model.Estado_Cita;
 import com.microservice.citas.repository.CitaRepository;
 import com.microservice.citas.service.validaciones.createCita.ValidarCreacionCita;
 import com.microservice.citas.service.validaciones.reajendar.ValidarReagendaCita;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,8 +30,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
+
 public class CitaServiceImp implements ICitaService{
-    private final UserClient userClient;
+    private final UserClientAdapter userClientAdapter;
     private final CitaRepository citaRepository;
     private final List<ValidarCreacionCita> validacionesAendaCitas;
     private final List<ValidarReagendaCita> validacionesReagendaCitas;
@@ -136,7 +140,7 @@ public class CitaServiceImp implements ICitaService{
 
     @Override
     public Page<DetalleCitaDto> findByCedulaPaciente(String cedulaPaciente, Pageable pageable) {
-        DetallePacienteDto paciente = userClient.findByCedulaPaciente(cedulaPaciente);
+        DetallePacienteDto paciente = userClientAdapter.findByCedulaPaciente(cedulaPaciente);
         Page<Cita> citas = citaRepository.findByIdPaciente(paciente.idPaciente(), pageable);
 
         Set<UUID> idDoctors = pageCitasToSetIdDoctoresHelper(citas);
@@ -159,12 +163,14 @@ public class CitaServiceImp implements ICitaService{
                 .orElseThrow(()-> new EntityNotFoundException("Cita no encontrada con id: " + id_Cita));
     }
 
+    @CircuitBreaker(name = "userClient", fallbackMethod = "fallbackgetDocotorDetailsHelper")
     private DetalleDoctorDto getDocotorDetailsHelper(UUID idDoctor){
-        return userClient.findDoctorById(idDoctor);
+        return userClientAdapter.findDoctorById(idDoctor);
     }
 
+    @CircuitBreaker(name = "userClient", fallbackMethod = "fallbackgetPacienteDetailsHelper")
     private DetallePacienteDto getPacienteDetailsHelper(UUID idPaciente){
-        return userClient.findByIdPaciente(idPaciente);
+        return userClientAdapter.findByIdPaciente(idPaciente);
     }
 
     private Map<UUID, DetalleDoctorDto> setOfIdDotoresToMapHelper(Set<UUID> idDoctores){
